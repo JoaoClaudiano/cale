@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>· rotina de estudos ·</title>
+    <title>rotina · estudos · improved</title>
     <style>
         * {
             margin: 0;
@@ -22,7 +22,7 @@
         }
 
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             width: 100%;
         }
@@ -31,7 +31,7 @@
             font-size: 1.8rem;
             font-weight: 500;
             letter-spacing: -0.02em;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.2rem;
             color: #0f172a;
             border-left: 5px solid #3b82f6;
             padding-left: 1rem;
@@ -40,18 +40,13 @@
         h2 {
             font-size: 1.3rem;
             font-weight: 500;
-            margin: 1.8rem 0 1rem 0;
+            margin: 2rem 0 1rem 0;
             display: flex;
             align-items: center;
             gap: 0.5rem;
             color: #334155;
             border-bottom: 1px solid #e2e8f0;
             padding-bottom: 0.5rem;
-        }
-
-        h2 i {
-            font-size: 1.4rem;
-            font-style: normal;
         }
 
         .card-grid {
@@ -62,15 +57,10 @@
 
         .card {
             background: white;
-            border-radius: 20px;
+            border-radius: 24px;
             padding: 1.2rem;
             box-shadow: 0 4px 12px rgba(0,0,0,0.02);
             border: 1px solid #e9eef2;
-            transition: 0.2s;
-        }
-
-        .card:active {
-            background: #f8fafc;
         }
 
         .disciplina-titulo {
@@ -225,6 +215,26 @@
         }
 
         /* checklist frequência */
+        .frequencia-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .check-all-btn {
+            background: #eef2ff;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            color: #2563eb;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
         .freq-item {
             display: flex;
             align-items: center;
@@ -255,20 +265,14 @@
             color: #475569;
         }
 
-        .check-all-btn {
-            background: #eef2ff;
-            border: none;
-            padding: 0.6rem 1.2rem;
-            border-radius: 40px;
-            font-size: 0.9rem;
-            color: #2563eb;
-            font-weight: 500;
-            margin: 0.8rem 0 0.2rem;
-            cursor: pointer;
-            width: fit-content;
+        /* tarefas e tópicos */
+        .list-wrapper {
+            background: white;
+            border-radius: 24px;
+            padding: 1.2rem;
+            border: 1px solid #e9eef2;
         }
 
-        /* estudo e conteúdo */
         .task-list, .topic-list {
             list-style: none;
             margin: 1rem 0 0.5rem;
@@ -289,8 +293,25 @@
         }
 
         .task-text, .topic-text {
+            flex: 1;
             font-size: 0.98rem;
             color: #1f2a41;
+            word-break: break-word;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.4rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0 0.3rem;
+            transition: 0.1s;
+        }
+
+        .delete-btn:hover {
+            color: #ef4444;
         }
 
         .add-area {
@@ -328,7 +349,43 @@
         .small-note {
             color: #64748b;
             font-size: 0.85rem;
-            margin-top: 0.3rem;
+            margin-top: 0.5rem;
+            text-align: right;
+        }
+
+        /* mini calendário semanal */
+        .week-row {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding: 0.5rem 0 1rem;
+            scrollbar-width: thin;
+        }
+
+        .day-card {
+            background: white;
+            border-radius: 20px;
+            padding: 1rem;
+            min-width: 140px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .day-title {
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+            color: #2563eb;
+            border-bottom: 1px solid #eef2ff;
+            padding-bottom: 0.3rem;
+        }
+
+        .day-class {
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            padding: 0.3rem 0;
+            border-left: 2px solid #3b82f6;
+            padding-left: 0.5rem;
+            background: #f8fafc;
+            border-radius: 0 8px 8px 0;
         }
 
         footer {
@@ -337,53 +394,56 @@
             color: #94a3b8;
             font-size: 0.85rem;
         }
-
-        @media (max-width: 480px) {
-            h1 { font-size: 1.6rem; }
-            .card { padding: 1rem; }
-            .modal-card { padding: 1.2rem; }
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📘 plano de rotina · semestre 2026.1</h1>
+        <h1>📘 plano de rotina · melhorado</h1>
+
+        <!-- VISÃO SEMANAL RÁPIDA -->
+        <h2><i>📅</i> agenda da semana</h2>
+        <div class="week-row" id="weekOverview"></div>
 
         <!-- CARDS DAS DISCIPLINAS -->
         <div class="card-grid" id="cardsContainer"></div>
 
-        <!-- CHECKLIST FREQUÊNCIA -->
+        <!-- CHECKLIST FREQUÊNCIA COM PERSISTÊNCIA -->
         <h2><i>📋</i> frequência nas aulas</h2>
-        <div style="background: white; border-radius: 24px; padding: 1.2rem; border: 1px solid #e9eef2;">
-            <button class="check-all-btn" id="checkAllFreq">✓ marcar todas</button>
+        <div class="list-wrapper">
+            <div class="frequencia-header">
+                <button class="check-all-btn" id="checkAllFreq">✓ marcar todas</button>
+                <span class="small-note" id="freqCounter"></span>
+            </div>
             <div id="frequenciaLista" class="frequencia-lista"></div>
-            <div class="small-note">Toque para marcar presença</div>
+            <div class="small-note">✔️ automático: suas marcações ficam salvas</div>
         </div>
 
-        <!-- CRONOGRAMA DE ESTUDOS (TAREFAS) -->
+        <!-- CRONOGRAMA DE ESTUDOS (TAREFAS) COM PERSISTÊNCIA -->
         <h2><i>⏱️</i> cronograma de estudos</h2>
-        <div style="background: white; border-radius: 24px; padding: 1.2rem; border: 1px solid #e9eef2;">
+        <div class="list-wrapper">
             <ul class="task-list" id="taskList"></ul>
             <div class="add-area">
                 <input type="text" id="newTaskInput" class="add-input" placeholder="ex: revisar apontamentos" autocomplete="off">
                 <button class="add-btn" id="addTaskBtn">+</button>
             </div>
+            <div class="small-note">clique no "x" para remover</div>
         </div>
 
         <!-- CONTEÚDOS A ESTUDAR/REVISAR -->
         <h2><i>📚</i> conteúdos por disciplina</h2>
-        <div style="background: white; border-radius: 24px; padding: 1.2rem; border: 1px solid #e9eef2;">
+        <div class="list-wrapper">
             <ul class="topic-list" id="topicList"></ul>
             <div class="add-area">
                 <input type="text" id="newTopicInput" class="add-input" placeholder="ex: betuminosos: ensaios" autocomplete="off">
                 <button class="add-btn" id="addTopicBtn">+</button>
             </div>
+            <div class="small-note">clique no "x" para remover</div>
         </div>
 
-        <footer>toque nos botões "ver horário completo" → modal com todas as datas</footer>
+        <footer>dados salvos automaticamente no seu navegador</footer>
     </div>
 
-    <!-- MODAL (único) -->
+    <!-- MODAL HORÁRIOS COMPLETOS -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-card">
             <button class="close-btn" id="closeModalBtn">&times;</button>
@@ -394,8 +454,9 @@
 
     <script>
         (function() {
-            // ---------- configurações e dados ----------
+            // ---------- configurações e dados das disciplinas ----------
             const weekdayMap = { 'DOM':0, 'SEG':1, 'TER':2, 'QUA':3, 'QUI':4, 'SEX':5, 'SAB':6 };
+            const weekdayNames = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB'];
 
             const courses = [
                 { codigo: 'TC0610', nome: 'MATERIAIS BETUMINOSOS', turma: '01', local: 'Bloco 708 - Sala 24',
@@ -412,27 +473,25 @@
                   dataInicio: '02/03/2026', dataFim: '07/07/2026' }
             ];
 
-            // função auxiliar: converter dd/mm/aaaa -> Date (meio-dia para evitar problemas de fuso)
+            // função auxiliar: converter dd/mm/aaaa -> Date
             function parseDateBR(str) {
                 let [d, m, a] = str.split('/').map(Number);
-                return new Date(a, m-1, d, 12, 0, 0); // meio-dia
+                return new Date(a, m-1, d, 12, 0, 0);
             }
 
-            // gerar todas as ocorrências de uma disciplina (array de objetos com data, hora, diaSemana)
+            // gerar todas as ocorrências de uma disciplina
             function gerarDatasCurso(curso) {
                 let datas = [];
                 const start = parseDateBR(curso.dataInicio);
                 const end = parseDateBR(curso.dataFim);
-                end.setHours(23,59,59); // incluir último dia
+                end.setHours(23,59,59);
 
                 curso.horarios.forEach(horario => {
                     const diaNum = weekdayMap[horario.dia];
                     let primeira = new Date(start);
-                    // ajustar para o primeiro dia da semana igual a diaNum
                     while (primeira.getDay() !== diaNum && primeira <= end) {
                         primeira.setDate(primeira.getDate() + 1);
                     }
-                    // agora iterar a cada 7 dias
                     let current = new Date(primeira);
                     while (current <= end) {
                         datas.push({
@@ -440,20 +499,82 @@
                             dateStr: current.toLocaleDateString('pt-BR'),
                             diaSemana: horario.dia,
                             horario: `${horario.inicio}–${horario.fim}`,
-                            local: curso.local
+                            local: curso.local,
+                            cursoNome: curso.nome,
+                            cursoCodigo: curso.codigo
                         });
                         current.setDate(current.getDate() + 7);
                     }
                 });
-                // ordenar por data
                 datas.sort((a,b) => a.dateObj - b.dateObj);
                 return datas;
             }
 
-            // pré-calcular datas para cada curso
             courses.forEach(c => c._datas = gerarDatasCurso(c));
 
-            // ---------- renderizar cards ----------
+            // ---------- estado global com persistência (localStorage) ----------
+            let attendanceState = []; // array de boolean, ordem = todas as aulas
+            let tasks = [];
+            let topics = [];
+
+            // carregar do localStorage
+            function loadFromStorage() {
+                // frequência
+                const savedAttendance = localStorage.getItem('attendanceState');
+                if (savedAttendance) {
+                    attendanceState = JSON.parse(savedAttendance);
+                } else {
+                    // inicializa com false para todas as aulas
+                    attendanceState = courses.flatMap(c => c._datas.map(() => false));
+                }
+
+                // tarefas
+                const savedTasks = localStorage.getItem('studyTasks');
+                if (savedTasks) {
+                    tasks = JSON.parse(savedTasks);
+                } else {
+                    tasks = [
+                        'Revisar Materiais Betuminosos (apostila cap.2)',
+                        'Exercícios de Resistência dos Materiais I',
+                        'Ler norma de Instalações Hidrossanitárias',
+                        'Sistemas de Abastecimento: resumo'
+                    ];
+                }
+
+                // tópicos
+                const savedTopics = localStorage.getItem('studyTopics');
+                if (savedTopics) {
+                    topics = JSON.parse(savedTopics);
+                } else {
+                    topics = [
+                        'TC0610 – propriedades dos ligantes',
+                        'TC0610 – ensaios de penetração',
+                        'TB0793 – diagrama tensão-deformação',
+                        'TB0793 – lei de Hooke',
+                        'TD0022 – ramais e colunas',
+                        'TD0022 – desconto e ventilação',
+                        'TD0023 – adutoras e estações',
+                        'TD0023 – demanda de água'
+                    ];
+                }
+
+                // garantir tamanhos consistentes
+                const totalAulas = courses.flatMap(c => c._datas).length;
+                if (attendanceState.length !== totalAulas) {
+                    attendanceState = courses.flatMap(c => c._datas.map(() => false));
+                }
+            }
+
+            // salvar tudo
+            function saveAll() {
+                localStorage.setItem('attendanceState', JSON.stringify(attendanceState));
+                localStorage.setItem('studyTasks', JSON.stringify(tasks));
+                localStorage.setItem('studyTopics', JSON.stringify(topics));
+            }
+
+            loadFromStorage();
+
+            // ---------- render cards das disciplinas ----------
             const cardsContainer = document.getElementById('cardsContainer');
             function renderCards() {
                 cardsContainer.innerHTML = '';
@@ -473,18 +594,18 @@
                         <div class="local">${curso.local}</div>
                         <div class="horario-badge">${horariosHTML}</div>
                         <div style="font-size:0.85rem; color:#64748b; margin:0.3rem 0 0.6rem;">${curso.dataInicio} — ${curso.dataFim}</div>
-                        <button class="btn-modal" data-curso='${JSON.stringify(curso)}'>ver horário completo</button>
+                        <button class="btn-modal" data-curso='${JSON.stringify({codigo:curso.codigo, turma:curso.turma})}'>ver horário completo</button>
                     `;
                     cardsContainer.appendChild(card);
                 });
 
-                // adicionar eventos aos botões "ver horário completo"
+                // eventos dos botões
                 document.querySelectorAll('.btn-modal').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        const cursoData = JSON.parse(btn.dataset.curso);
-                        const cursoCompleto = courses.find(c => c.codigo === cursoData.codigo && c.turma === cursoData.turma);
-                        abrirModal(cursoCompleto);
+                        const { codigo, turma } = JSON.parse(btn.dataset.curso);
+                        const curso = courses.find(c => c.codigo === codigo && c.turma === turma);
+                        abrirModal(curso);
                     });
                 });
             }
@@ -507,130 +628,175 @@
                 modalOverlay.style.display = 'flex';
             }
 
-            function fecharModal() {
-                modalOverlay.style.display = 'none';
-            }
-
-            closeModalBtn.addEventListener('click', fecharModal);
+            closeModalBtn.addEventListener('click', () => modalOverlay.style.display = 'none');
             modalOverlay.addEventListener('click', (e) => {
-                if (e.target === modalOverlay) fecharModal();
+                if (e.target === modalOverlay) modalOverlay.style.display = 'none';
             });
 
-            // ---------- lista de frequência (todas as aulas de todas as disciplinas) ----------
+            // ---------- lista de frequência ----------
             const frequenciaLista = document.getElementById('frequenciaLista');
-            let attendanceItems = [];
-
-            function construirFrequencia() {
-                attendanceItems = [];
-                courses.forEach(curso => {
-                    curso._datas.forEach(d => {
-                        attendanceItems.push({
-                            id: `${curso.codigo}-${d.dateStr}-${d.horario}`,
-                            curso: curso.nome,
-                            codigo: curso.codigo,
-                            data: d.dateStr,
-                            dia: d.diaSemana,
-                            horario: d.horario,
-                            checked: false
-                        });
-                    });
-                });
-                renderFrequencia();
-            }
+            const freqCounter = document.getElementById('freqCounter');
 
             function renderFrequencia() {
-                if (attendanceItems.length === 0) {
-                    frequenciaLista.innerHTML = '<div style="padding:1rem; color:#64748b;">Nenhuma aula encontrada</div>';
+                const todasAulas = courses.flatMap(c => c._datas);
+                if (todasAulas.length === 0) {
+                    frequenciaLista.innerHTML = '<div style="padding:1rem;">Nenhuma aula encontrada</div>';
                     return;
                 }
+
                 let html = '';
-                attendanceItems.forEach((item, idx) => {
+                todasAulas.forEach((aula, idx) => {
                     html += `
                         <div class="freq-item">
-                            <input type="checkbox" class="freq-check" data-index="${idx}" id="freq-${idx}">
+                            <input type="checkbox" class="freq-check" data-index="${idx}" id="freq-${idx}" ${attendanceState[idx] ? 'checked' : ''}>
                             <label for="freq-${idx}" class="freq-info">
-                                <span class="freq-curso">${item.curso}</span> · 
-                                <span class="freq-data">${item.data} (${item.dia}) ${item.horario}</span>
+                                <span class="freq-curso">${aula.cursoNome}</span> · 
+                                <span class="freq-data">${aula.dateStr} (${aula.diaSemana}) ${aula.horario}</span>
                             </label>
                         </div>
                     `;
                 });
                 frequenciaLista.innerHTML = html;
+
+                // atualizar contador
+                const total = todasAulas.length;
+                const feitas = attendanceState.filter(Boolean).length;
+                freqCounter.innerText = `${feitas} de ${total} presenças`;
+
+                // adicionar listeners nos checkboxes
+                document.querySelectorAll('.freq-check').forEach(cb => {
+                    cb.addEventListener('change', (e) => {
+                        const index = e.target.dataset.index;
+                        attendanceState[index] = e.target.checked;
+                        saveAll();
+                        renderFrequencia(); // atualiza contador
+                    });
+                });
             }
 
-            // marcar todas as frequências
             document.getElementById('checkAllFreq').addEventListener('click', () => {
-                document.querySelectorAll('.freq-check').forEach(cb => cb.checked = true);
+                const todasAulas = courses.flatMap(c => c._datas);
+                attendanceState = todasAulas.map(() => true);
+                saveAll();
+                renderFrequencia();
             });
 
-            // ---------- estudo (tarefas) ----------
-            let tasks = [
-                'Revisar Materiais Betuminosos (apostila cap.2)',
-                'Exercícios de Resistência dos Materiais I',
-                'Ler norma de Instalações Hidrossanitárias',
-                'Sistemas de Abastecimento: resumo'
-            ];
-
+            // ---------- tarefas ----------
+            const taskList = document.getElementById('taskList');
             function renderTasks() {
-                const taskList = document.getElementById('taskList');
                 taskList.innerHTML = tasks.map((t, i) => `
                     <li class="task-item">
-                        <input type="checkbox" id="task-${i}">
+                        <input type="checkbox" id="task-${i}" ${localStorage.getItem(`task_${i}`) === 'checked' ? 'checked' : ''}>
                         <label for="task-${i}" class="task-text">${t}</label>
+                        <button class="delete-btn" data-task-index="${i}" aria-label="remover">✕</button>
                     </li>
                 `).join('');
+
+                // eventos de checkbox das tarefas
+                document.querySelectorAll('.task-item input[type=checkbox]').forEach(cb => {
+                    cb.addEventListener('change', (e) => {
+                        const id = e.target.id;
+                        localStorage.setItem(id, e.target.checked ? 'checked' : '');
+                    });
+                });
+
+                // eventos de delete
+                document.querySelectorAll('.delete-btn[data-task-index]').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const idx = e.target.dataset.taskIndex;
+                        tasks.splice(idx, 1);
+                        saveAll();
+                        renderTasks();
+                    });
+                });
             }
 
             document.getElementById('addTaskBtn').addEventListener('click', () => {
                 const inp = document.getElementById('newTaskInput');
                 if (inp.value.trim()) {
                     tasks.push(inp.value.trim());
+                    saveAll();
                     renderTasks();
                     inp.value = '';
                 }
             });
 
-            // ---------- conteúdos por disciplina (tópicos) ----------
-            let topics = [
-                'TC0610 – propriedades dos ligantes',
-                'TC0610 – ensaios de penetração',
-                'TB0793 – diagrama tensão-deformação',
-                'TB0793 – lei de Hooke',
-                'TD0022 – ramais e colunas',
-                'TD0022 – desconto e ventilação',
-                'TD0023 – adutoras e estações',
-                'TD0023 – demanda de água'
-            ];
-
+            // ---------- tópicos ----------
+            const topicList = document.getElementById('topicList');
             function renderTopics() {
-                const topicList = document.getElementById('topicList');
                 topicList.innerHTML = topics.map((t, i) => `
                     <li class="topic-item">
-                        <input type="checkbox" id="topic-${i}">
+                        <input type="checkbox" id="topic-${i}" ${localStorage.getItem(`topic_${i}`) === 'checked' ? 'checked' : ''}>
                         <label for="topic-${i}" class="topic-text">${t}</label>
+                        <button class="delete-btn" data-topic-index="${i}" aria-label="remover">✕</button>
                     </li>
                 `).join('');
+
+                document.querySelectorAll('.topic-item input[type=checkbox]').forEach(cb => {
+                    cb.addEventListener('change', (e) => {
+                        const id = e.target.id;
+                        localStorage.setItem(id, e.target.checked ? 'checked' : '');
+                    });
+                });
+
+                document.querySelectorAll('.delete-btn[data-topic-index]').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const idx = e.target.dataset.topicIndex;
+                        topics.splice(idx, 1);
+                        saveAll();
+                        renderTopics();
+                    });
+                });
             }
 
             document.getElementById('addTopicBtn').addEventListener('click', () => {
                 const inp = document.getElementById('newTopicInput');
                 if (inp.value.trim()) {
                     topics.push(inp.value.trim());
+                    saveAll();
                     renderTopics();
                     inp.value = '';
                 }
             });
 
+            // ---------- visão semanal ----------
+            function renderWeekOverview() {
+                const weekRow = document.getElementById('weekOverview');
+                // datas da semana atual (fixa para exemplo: usar uma semana qualquer de março)
+                // na prática, seria dinâmico, mas para simplificar, mostra os dias da semana com base nas aulas
+                const weekDays = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB', 'DOM'];
+                const aulasPorDia = {};
+                weekDays.forEach(d => aulasPorDia[d] = []);
+
+                courses.forEach(curso => {
+                    curso.horarios.forEach(h => {
+                        aulasPorDia[h.dia].push({ nome: curso.nome, horario: `${h.inicio}–${h.fim}` });
+                    });
+                });
+
+                let html = '';
+                weekDays.forEach(dia => {
+                    const aulas = aulasPorDia[dia];
+                    if (aulas.length > 0) {
+                        html += `<div class="day-card"><div class="day-title">${dia}</div>`;
+                        aulas.forEach(a => {
+                            html += `<div class="day-class"><strong>${a.nome}</strong><br>${a.horario}</div>`;
+                        });
+                        html += `</div>`;
+                    }
+                });
+                weekRow.innerHTML = html || '<p style="color:#64748b;">Nenhuma aula esta semana</p>';
+            }
+
             // ---------- inicializar ----------
             renderCards();
-            construirFrequencia();
+            renderFrequencia();
             renderTasks();
             renderTopics();
+            renderWeekOverview();
 
-            // opcional: permitir fechar modal com ESC
-            window.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && modalOverlay.style.display === 'flex') fecharModal();
-            });
+            // salvar ao sair (já salvamos a cada mudança)
+            window.addEventListener('beforeunload', saveAll);
         })();
     </script>
 </body>
