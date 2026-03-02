@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>· rotina de estudos ·</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background: #f4f6fa;
+            padding: 1rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #1e293b;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 500;
+            letter-spacing: -0.02em;
+            margin-bottom: 1.5rem;
+            color: #0f172a;
+            border-left: 5px solid #3b82f6;
+            padding-left: 1rem;
+        }
+
+        h2 {
+            font-size: 1.3rem;
+            font-weight: 500;
+            margin: 1.8rem 0 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #334155;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+        }
+
+        h2 i {
+            font-size: 1.4rem;
+            font-style: normal;
+        }
+
+        .card-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 1.2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            border: 1px solid #e9eef2;
+            transition: 0.2s;
+        }
+
+        .card:active {
+            background: #f8fafc;
+        }
+
+        .disciplina-titulo {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 0.4rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        .codigo {
+            font-size: 0.9rem;
+            background: #eef2ff;
+            padding: 0.2rem 0.8rem;
+            border-radius: 30px;
+            color: #2563eb;
+            font-weight: 500;
+        }
+
+        .local {
+            font-size: 0.95rem;
+            color: #475569;
+            margin: 0.5rem 0 0.6rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .local::before {
+            content: "📍";
+            font-size: 1rem;
+        }
+
+        .horario-badge {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.5rem 0 0.8rem 0;
+        }
+
+        .horario-item {
+            background: #f1f5f9;
+            padding: 0.3rem 1rem;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            color: #1e293b;
+            font-weight: 500;
+        }
+
+        .btn-modal {
+            background: none;
+            border: 1px solid #cbd5e1;
+            padding: 0.5rem 1rem;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            color: #334155;
+            cursor: pointer;
+            width: fit-content;
+            transition: 0.15s;
+            margin-top: 0.3rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn-modal:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+
+        .btn-modal::after {
+            content: "↗";
+            font-size: 1rem;
+        }
+
+        /* modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(3px);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+
+        .modal-card {
+            background: white;
+            border-radius: 32px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 1.8rem 1.5rem;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+            animation: fadeUp 0.2s ease;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-card h3 {
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin-bottom: 1.2rem;
+            color: #0f172a;
+            padding-right: 1.5rem;
+        }
+
+        .close-btn {
+            float: right;
+            font-size: 1.8rem;
+            line-height: 1;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #64748b;
+            padding: 0 0.5rem;
+        }
+
+        .lista-datas {
+            list-style: none;
+            margin: 1rem 0;
+        }
+
+        .lista-datas li {
+            padding: 0.7rem 0;
+            border-bottom: 1px solid #edf2f7;
+            display: flex;
+            justify-content: space-between;
+            font-size: 1rem;
+        }
+
+        .lista-datas li:last-child {
+            border-bottom: none;
+        }
+
+        .data-dia {
+            font-weight: 500;
+        }
+
+        .data-hora {
+            color: #2563eb;
+            font-weight: 500;
+        }
+
+        /* checklist frequência */
+        .freq-item {
+            display: flex;
+            align-items: center;
+            padding: 0.7rem 0;
+            border-bottom: 1px dashed #dee4eb;
+            gap: 0.8rem;
+        }
+
+        .freq-check {
+            width: 1.3rem;
+            height: 1.3rem;
+            accent-color: #3b82f6;
+            flex-shrink: 0;
+        }
+
+        .freq-info {
+            flex: 1;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .freq-curso {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .freq-data {
+            color: #475569;
+        }
+
+        .check-all-btn {
+            background: #eef2ff;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            color: #2563eb;
+            font-weight: 500;
+            margin: 0.8rem 0 0.2rem;
+            cursor: pointer;
+            width: fit-content;
+        }
+
+        /* estudo e conteúdo */
+        .task-list, .topic-list {
+            list-style: none;
+            margin: 1rem 0 0.5rem;
+        }
+
+        .task-item, .topic-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid #ecf1f6;
+        }
+
+        .task-item input[type="checkbox"], .topic-item input[type="checkbox"] {
+            width: 1.2rem;
+            height: 1.2rem;
+            accent-color: #3b82f6;
+        }
+
+        .task-text, .topic-text {
+            font-size: 0.98rem;
+            color: #1f2a41;
+        }
+
+        .add-area {
+            display: flex;
+            margin: 1rem 0 0.5rem;
+            gap: 0.5rem;
+        }
+
+        .add-input {
+            flex: 1;
+            padding: 0.8rem 1rem;
+            border: 1px solid #d1d9e6;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            background: white;
+        }
+
+        .add-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 0 1.5rem;
+            font-weight: 500;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: 0.1s;
+            white-space: nowrap;
+        }
+
+        .add-btn:active {
+            background: #2563eb;
+        }
+
+        .small-note {
+            color: #64748b;
+            font-size: 0.85rem;
+            margin-top: 0.3rem;
+        }
+
+        footer {
+            margin-top: 2.5rem;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 480px) {
+            h1 { font-size: 1.6rem; }
+            .card { padding: 1rem; }
+            .modal-card { padding: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📘 plano de rotina · semestre 2026.1</h1>
+
+        <!-- CARDS DAS DISCIPLINAS -->
+        <div class="card-grid" id="cardsContainer"></div>
+
+        <!-- CHECKLIST FREQUÊNCIA -->
+        <h2><i>📋</i> frequência nas aulas</h2>
+        <div style="background: white; border-radius: 24px; padding: 1.2rem; border: 1px solid #e9eef2;">
+            <button class="check-all-btn" id="checkAllFreq">✓ marcar todas</button>
+            <div id="frequenciaLista" class="frequencia-lista"></div>
+            <div class="small-note">Toque para marcar presença</div>
+        </div>
+
+        <!-- CRONOGRAMA DE ESTUDOS (TAREFAS) -->
+        <h2><i>⏱️</i> cronograma de estudos</h2>
+        <div style="background: white; border-radius: 24px; padding: 1.2rem; border: 1px solid #e9eef2;">
+            <ul class="task-list" id="taskList"></ul>
+            <div class="add-area">
+                <input type="text" id="newTaskInput" class="add-input" placeholder="ex: revisar apontamentos" autocomplete="off">
+                <button class="add-btn" id="addTaskBtn">+</button>
+            </div>
+        </div>
+
+        <!-- CONTEÚDOS A ESTUDAR/REVISAR -->
+        <h2><i>📚</i> conteúdos por disciplina</h2>
+        <div style="background: white; border-radius: 24px; padding: 1.2rem; border: 1px solid #e9eef2;">
+            <ul class="topic-list" id="topicList"></ul>
+            <div class="add-area">
+                <input type="text" id="newTopicInput" class="add-input" placeholder="ex: betuminosos: ensaios" autocomplete="off">
+                <button class="add-btn" id="addTopicBtn">+</button>
+            </div>
+        </div>
+
+        <footer>toque nos botões "ver horário completo" → modal com todas as datas</footer>
+    </div>
+
+    <!-- MODAL (único) -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-card">
+            <button class="close-btn" id="closeModalBtn">&times;</button>
+            <h3 id="modalTitle">Horários completos</h3>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // ---------- configurações e dados ----------
+            const weekdayMap = { 'DOM':0, 'SEG':1, 'TER':2, 'QUA':3, 'QUI':4, 'SEX':5, 'SAB':6 };
+
+            const courses = [
+                { codigo: 'TC0610', nome: 'MATERIAIS BETUMINOSOS', turma: '01', local: 'Bloco 708 - Sala 24',
+                  horarios: [{ dia: 'QUA', inicio: '14:00', fim: '17:00' }],
+                  dataInicio: '02/03/2026', dataFim: '07/07/2026' },
+                { codigo: 'TB0793', nome: 'RESISTENCIA DOS MATERIAIS I', turma: '02', local: 'Bloco 708 - Sala 23',
+                  horarios: [{ dia: 'TER', inicio: '14:00', fim: '16:00' }, { dia: 'QUI', inicio: '14:00', fim: '16:00' }],
+                  dataInicio: '02/03/2026', dataFim: '07/07/2026' },
+                { codigo: 'TD0022', nome: 'INSTALAÇÕES HIDROSSANITÁRIAS', turma: '01', local: 'Bloco 727 - Sala 21',
+                  horarios: [{ dia: 'SEG', inicio: '10:00', fim: '13:00' }],
+                  dataInicio: '02/03/2026', dataFim: '07/07/2026' },
+                { codigo: 'TD0023', nome: 'SISTEMAS DE ABASTECIMENTO DE ÁGUA', turma: '01', local: 'Bloco 708 - Sala 22',
+                  horarios: [{ dia: 'SEG', inicio: '08:00', fim: '10:00' }],
+                  dataInicio: '02/03/2026', dataFim: '07/07/2026' }
+            ];
+
+            // função auxiliar: converter dd/mm/aaaa -> Date (meio-dia para evitar problemas de fuso)
+            function parseDateBR(str) {
+                let [d, m, a] = str.split('/').map(Number);
+                return new Date(a, m-1, d, 12, 0, 0); // meio-dia
+            }
+
+            // gerar todas as ocorrências de uma disciplina (array de objetos com data, hora, diaSemana)
+            function gerarDatasCurso(curso) {
+                let datas = [];
+                const start = parseDateBR(curso.dataInicio);
+                const end = parseDateBR(curso.dataFim);
+                end.setHours(23,59,59); // incluir último dia
+
+                curso.horarios.forEach(horario => {
+                    const diaNum = weekdayMap[horario.dia];
+                    let primeira = new Date(start);
+                    // ajustar para o primeiro dia da semana igual a diaNum
+                    while (primeira.getDay() !== diaNum && primeira <= end) {
+                        primeira.setDate(primeira.getDate() + 1);
+                    }
+                    // agora iterar a cada 7 dias
+                    let current = new Date(primeira);
+                    while (current <= end) {
+                        datas.push({
+                            dateObj: new Date(current),
+                            dateStr: current.toLocaleDateString('pt-BR'),
+                            diaSemana: horario.dia,
+                            horario: `${horario.inicio}–${horario.fim}`,
+                            local: curso.local
+                        });
+                        current.setDate(current.getDate() + 7);
+                    }
+                });
+                // ordenar por data
+                datas.sort((a,b) => a.dateObj - b.dateObj);
+                return datas;
+            }
+
+            // pré-calcular datas para cada curso
+            courses.forEach(c => c._datas = gerarDatasCurso(c));
+
+            // ---------- renderizar cards ----------
+            const cardsContainer = document.getElementById('cardsContainer');
+            function renderCards() {
+                cardsContainer.innerHTML = '';
+                courses.forEach(curso => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+
+                    const horariosHTML = curso.horarios.map(h => 
+                        `<span class="horario-item">${h.dia} ${h.inicio}–${h.fim}</span>`
+                    ).join('');
+
+                    card.innerHTML = `
+                        <div class="disciplina-titulo">
+                            <span>${curso.nome}</span>
+                            <span class="codigo">${curso.codigo} · turma ${curso.turma}</span>
+                        </div>
+                        <div class="local">${curso.local}</div>
+                        <div class="horario-badge">${horariosHTML}</div>
+                        <div style="font-size:0.85rem; color:#64748b; margin:0.3rem 0 0.6rem;">${curso.dataInicio} — ${curso.dataFim}</div>
+                        <button class="btn-modal" data-curso='${JSON.stringify(curso)}'>ver horário completo</button>
+                    `;
+                    cardsContainer.appendChild(card);
+                });
+
+                // adicionar eventos aos botões "ver horário completo"
+                document.querySelectorAll('.btn-modal').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const cursoData = JSON.parse(btn.dataset.curso);
+                        const cursoCompleto = courses.find(c => c.codigo === cursoData.codigo && c.turma === cursoData.turma);
+                        abrirModal(cursoCompleto);
+                    });
+                });
+            }
+
+            // ---------- modal ----------
+            const modalOverlay = document.getElementById('modalOverlay');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalContent = document.getElementById('modalContent');
+            const closeModalBtn = document.getElementById('closeModalBtn');
+
+            function abrirModal(curso) {
+                modalTitle.innerText = `${curso.codigo} – ${curso.nome} (turma ${curso.turma})`;
+                let html = '<ul class="lista-datas">';
+                if (curso._datas.length === 0) html += '<li>Nenhuma data encontrada</li>';
+                curso._datas.forEach(item => {
+                    html += `<li><span class="data-dia">${item.dateStr} (${item.diaSemana})</span> <span class="data-hora">${item.horario}</span></li>`;
+                });
+                html += '</ul><p style="color:#475569; font-size:0.9rem;">📍 ' + curso.local + '</p>';
+                modalContent.innerHTML = html;
+                modalOverlay.style.display = 'flex';
+            }
+
+            function fecharModal() {
+                modalOverlay.style.display = 'none';
+            }
+
+            closeModalBtn.addEventListener('click', fecharModal);
+            modalOverlay.addEventListener('click', (e) => {
+                if (e.target === modalOverlay) fecharModal();
+            });
+
+            // ---------- lista de frequência (todas as aulas de todas as disciplinas) ----------
+            const frequenciaLista = document.getElementById('frequenciaLista');
+            let attendanceItems = [];
+
+            function construirFrequencia() {
+                attendanceItems = [];
+                courses.forEach(curso => {
+                    curso._datas.forEach(d => {
+                        attendanceItems.push({
+                            id: `${curso.codigo}-${d.dateStr}-${d.horario}`,
+                            curso: curso.nome,
+                            codigo: curso.codigo,
+                            data: d.dateStr,
+                            dia: d.diaSemana,
+                            horario: d.horario,
+                            checked: false
+                        });
+                    });
+                });
+                renderFrequencia();
+            }
+
+            function renderFrequencia() {
+                if (attendanceItems.length === 0) {
+                    frequenciaLista.innerHTML = '<div style="padding:1rem; color:#64748b;">Nenhuma aula encontrada</div>';
+                    return;
+                }
+                let html = '';
+                attendanceItems.forEach((item, idx) => {
+                    html += `
+                        <div class="freq-item">
+                            <input type="checkbox" class="freq-check" data-index="${idx}" id="freq-${idx}">
+                            <label for="freq-${idx}" class="freq-info">
+                                <span class="freq-curso">${item.curso}</span> · 
+                                <span class="freq-data">${item.data} (${item.dia}) ${item.horario}</span>
+                            </label>
+                        </div>
+                    `;
+                });
+                frequenciaLista.innerHTML = html;
+            }
+
+            // marcar todas as frequências
+            document.getElementById('checkAllFreq').addEventListener('click', () => {
+                document.querySelectorAll('.freq-check').forEach(cb => cb.checked = true);
+            });
+
+            // ---------- estudo (tarefas) ----------
+            let tasks = [
+                'Revisar Materiais Betuminosos (apostila cap.2)',
+                'Exercícios de Resistência dos Materiais I',
+                'Ler norma de Instalações Hidrossanitárias',
+                'Sistemas de Abastecimento: resumo'
+            ];
+
+            function renderTasks() {
+                const taskList = document.getElementById('taskList');
+                taskList.innerHTML = tasks.map((t, i) => `
+                    <li class="task-item">
+                        <input type="checkbox" id="task-${i}">
+                        <label for="task-${i}" class="task-text">${t}</label>
+                    </li>
+                `).join('');
+            }
+
+            document.getElementById('addTaskBtn').addEventListener('click', () => {
+                const inp = document.getElementById('newTaskInput');
+                if (inp.value.trim()) {
+                    tasks.push(inp.value.trim());
+                    renderTasks();
+                    inp.value = '';
+                }
+            });
+
+            // ---------- conteúdos por disciplina (tópicos) ----------
+            let topics = [
+                'TC0610 – propriedades dos ligantes',
+                'TC0610 – ensaios de penetração',
+                'TB0793 – diagrama tensão-deformação',
+                'TB0793 – lei de Hooke',
+                'TD0022 – ramais e colunas',
+                'TD0022 – desconto e ventilação',
+                'TD0023 – adutoras e estações',
+                'TD0023 – demanda de água'
+            ];
+
+            function renderTopics() {
+                const topicList = document.getElementById('topicList');
+                topicList.innerHTML = topics.map((t, i) => `
+                    <li class="topic-item">
+                        <input type="checkbox" id="topic-${i}">
+                        <label for="topic-${i}" class="topic-text">${t}</label>
+                    </li>
+                `).join('');
+            }
+
+            document.getElementById('addTopicBtn').addEventListener('click', () => {
+                const inp = document.getElementById('newTopicInput');
+                if (inp.value.trim()) {
+                    topics.push(inp.value.trim());
+                    renderTopics();
+                    inp.value = '';
+                }
+            });
+
+            // ---------- inicializar ----------
+            renderCards();
+            construirFrequencia();
+            renderTasks();
+            renderTopics();
+
+            // opcional: permitir fechar modal com ESC
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modalOverlay.style.display === 'flex') fecharModal();
+            });
+        })();
+    </script>
+</body>
+</html>
