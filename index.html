@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>rotina · estudos · improved</title>
+    <title>rotina · estudos · frequência compacta</title>
     <style>
         * {
             margin: 0;
@@ -113,7 +113,7 @@
             font-weight: 500;
         }
 
-        .btn-modal {
+        .btn-modal, .btn-secondary {
             background: none;
             border: 1px solid #cbd5e1;
             padding: 0.5rem 1rem;
@@ -129,7 +129,7 @@
             gap: 0.4rem;
         }
 
-        .btn-modal:hover {
+        .btn-modal:hover, .btn-secondary:hover {
             background: #f1f5f9;
             border-color: #94a3b8;
         }
@@ -139,7 +139,118 @@
             font-size: 1rem;
         }
 
-        /* modal */
+        .btn-secondary::after {
+            content: "→";
+            font-size: 1rem;
+        }
+
+        /* frequência compacta */
+        .frequencia-resumo {
+            background: white;
+            border-radius: 24px;
+            padding: 1.2rem;
+            border: 1px solid #e9eef2;
+            margin-bottom: 1.5rem;
+        }
+
+        .resumo-por-disciplina {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .disciplina-stats {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            background: #f8fafc;
+            padding: 0.8rem 1rem;
+            border-radius: 20px;
+        }
+
+        .stats-nome {
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .stats-contador {
+            color: #2563eb;
+            font-weight: 500;
+            background: #eef2ff;
+            padding: 0.2rem 1rem;
+            border-radius: 30px;
+        }
+
+        .check-all-disciplina {
+            background: #eef2ff;
+            border: none;
+            padding: 0.4rem 1rem;
+            border-radius: 30px;
+            color: #2563eb;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .proximas-aulas {
+            background: #f8fafc;
+            border-radius: 20px;
+            padding: 1rem;
+        }
+
+        .proximas-titulo {
+            font-weight: 500;
+            margin-bottom: 0.8rem;
+            color: #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .proximas-lista {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .aula-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px dashed #dee4eb;
+        }
+
+        .aula-check {
+            width: 1.2rem;
+            height: 1.2rem;
+            accent-color: #3b82f6;
+            flex-shrink: 0;
+        }
+
+        .aula-info {
+            flex: 1;
+            font-size: 0.9rem;
+            line-height: 1.3;
+        }
+
+        .aula-curso {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .aula-data {
+            color: #475569;
+        }
+
+        .link-modal-freq {
+            margin-top: 0.8rem;
+            text-align: right;
+        }
+
+        /* modal para lista completa de frequência */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -201,68 +312,23 @@
             font-size: 1rem;
         }
 
-        .lista-datas li:last-child {
-            border-bottom: none;
-        }
-
-        .data-dia {
-            font-weight: 500;
-        }
-
-        .data-hora {
-            color: #2563eb;
-            font-weight: 500;
-        }
-
-        /* checklist frequência */
-        .frequencia-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-
-        .check-all-btn {
-            background: #eef2ff;
-            border: none;
-            padding: 0.6rem 1.2rem;
-            border-radius: 40px;
-            font-size: 0.9rem;
-            color: #2563eb;
-            font-weight: 500;
-            cursor: pointer;
-        }
-
-        .freq-item {
+        .modal-freq-item {
             display: flex;
             align-items: center;
-            padding: 0.7rem 0;
-            border-bottom: 1px dashed #dee4eb;
-            gap: 0.8rem;
+            gap: 1rem;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid #ecf1f6;
         }
 
-        .freq-check {
-            width: 1.3rem;
-            height: 1.3rem;
+        .modal-freq-check {
+            width: 1.2rem;
+            height: 1.2rem;
             accent-color: #3b82f6;
-            flex-shrink: 0;
         }
 
-        .freq-info {
+        .modal-freq-info {
             flex: 1;
             font-size: 0.95rem;
-            line-height: 1.4;
-        }
-
-        .freq-curso {
-            font-weight: 600;
-            color: #1e293b;
-        }
-
-        .freq-data {
-            color: #475569;
         }
 
         /* tarefas e tópicos */
@@ -307,7 +373,6 @@
             line-height: 1;
             cursor: pointer;
             padding: 0 0.3rem;
-            transition: 0.1s;
         }
 
         .delete-btn:hover {
@@ -353,7 +418,6 @@
             text-align: right;
         }
 
-        /* mini calendário semanal */
         .week-row {
             display: flex;
             gap: 0.5rem;
@@ -398,7 +462,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>📘 plano de rotina · melhorado</h1>
+        <h1>📘 plano de rotina · frequência compacta</h1>
 
         <!-- VISÃO SEMANAL RÁPIDA -->
         <h2><i>📅</i> agenda da semana</h2>
@@ -407,18 +471,23 @@
         <!-- CARDS DAS DISCIPLINAS -->
         <div class="card-grid" id="cardsContainer"></div>
 
-        <!-- CHECKLIST FREQUÊNCIA COM PERSISTÊNCIA -->
+        <!-- FREQUÊNCIA COMPACTA (RESUMO + PRÓXIMAS) -->
         <h2><i>📋</i> frequência nas aulas</h2>
-        <div class="list-wrapper">
-            <div class="frequencia-header">
-                <button class="check-all-btn" id="checkAllFreq">✓ marcar todas</button>
-                <span class="small-note" id="freqCounter"></span>
+        <div class="frequencia-resumo">
+            <div class="resumo-por-disciplina" id="resumoDisciplinas"></div>
+            <div class="proximas-aulas">
+                <div class="proximas-titulo">
+                    <span>📌 próximas aulas</span>
+                    <span class="stats-contador" id="contadorGeral"></span>
+                </div>
+                <div class="proximas-lista" id="proximasAulasLista"></div>
+                <div class="link-modal-freq">
+                    <button class="btn-secondary" id="verTodasFrequencia">ver todas as aulas</button>
+                </div>
             </div>
-            <div id="frequenciaLista" class="frequencia-lista"></div>
-            <div class="small-note">✔️ automático: suas marcações ficam salvas</div>
         </div>
 
-        <!-- CRONOGRAMA DE ESTUDOS (TAREFAS) COM PERSISTÊNCIA -->
+        <!-- CRONOGRAMA DE ESTUDOS (TAREFAS) -->
         <h2><i>⏱️</i> cronograma de estudos</h2>
         <div class="list-wrapper">
             <ul class="task-list" id="taskList"></ul>
@@ -426,7 +495,6 @@
                 <input type="text" id="newTaskInput" class="add-input" placeholder="ex: revisar apontamentos" autocomplete="off">
                 <button class="add-btn" id="addTaskBtn">+</button>
             </div>
-            <div class="small-note">clique no "x" para remover</div>
         </div>
 
         <!-- CONTEÚDOS A ESTUDAR/REVISAR -->
@@ -437,24 +505,35 @@
                 <input type="text" id="newTopicInput" class="add-input" placeholder="ex: betuminosos: ensaios" autocomplete="off">
                 <button class="add-btn" id="addTopicBtn">+</button>
             </div>
-            <div class="small-note">clique no "x" para remover</div>
         </div>
 
-        <footer>dados salvos automaticamente no seu navegador</footer>
+        <footer>dados salvos · clique em "ver todas as aulas" para a lista completa</footer>
     </div>
 
-    <!-- MODAL HORÁRIOS COMPLETOS -->
-    <div class="modal-overlay" id="modalOverlay">
+    <!-- MODAL PARA LISTA COMPLETA DE FREQUÊNCIA -->
+    <div class="modal-overlay" id="modalFreqOverlay">
         <div class="modal-card">
-            <button class="close-btn" id="closeModalBtn">&times;</button>
-            <h3 id="modalTitle">Horários completos</h3>
-            <div id="modalContent"></div>
+            <button class="close-btn" id="closeFreqModal">&times;</button>
+            <h3>Todas as aulas do semestre</h3>
+            <div id="modalFreqLista"></div>
+            <div style="margin-top:1rem; text-align:right;">
+                <button class="btn-secondary" id="fecharModalFreq">fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PARA HORÁRIOS COMPLETOS (já existente) -->
+    <div class="modal-overlay" id="modalHorarioOverlay">
+        <div class="modal-card">
+            <button class="close-btn" id="closeHorarioModal">&times;</button>
+            <h3 id="modalHorarioTitle">Horários completos</h3>
+            <div id="modalHorarioContent"></div>
         </div>
     </div>
 
     <script>
         (function() {
-            // ---------- configurações e dados das disciplinas ----------
+            // ---------- dados das disciplinas ----------
             const weekdayMap = { 'DOM':0, 'SEG':1, 'TER':2, 'QUA':3, 'QUI':4, 'SEX':5, 'SAB':6 };
             const weekdayNames = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB'];
 
@@ -473,7 +552,6 @@
                   dataInicio: '02/03/2026', dataFim: '07/07/2026' }
             ];
 
-            // função auxiliar: converter dd/mm/aaaa -> Date
             function parseDateBR(str) {
                 let [d, m, a] = str.split('/').map(Number);
                 return new Date(a, m-1, d, 12, 0, 0);
@@ -501,7 +579,8 @@
                             horario: `${horario.inicio}–${horario.fim}`,
                             local: curso.local,
                             cursoNome: curso.nome,
-                            cursoCodigo: curso.codigo
+                            cursoCodigo: curso.codigo,
+                            id: `${curso.codigo}-${current.toISOString()}`
                         });
                         current.setDate(current.getDate() + 7);
                     }
@@ -512,60 +591,47 @@
 
             courses.forEach(c => c._datas = gerarDatasCurso(c));
 
-            // ---------- estado global com persistência (localStorage) ----------
-            let attendanceState = []; // array de boolean, ordem = todas as aulas
+            // ---------- estado com persistência ----------
+            let attendanceState = []; // boolean para todas as aulas
             let tasks = [];
             let topics = [];
 
-            // carregar do localStorage
             function loadFromStorage() {
                 // frequência
+                const totalAulas = courses.flatMap(c => c._datas).length;
                 const savedAttendance = localStorage.getItem('attendanceState');
                 if (savedAttendance) {
                     attendanceState = JSON.parse(savedAttendance);
+                    if (attendanceState.length !== totalAulas) {
+                        attendanceState = courses.flatMap(c => c._datas.map(() => false));
+                    }
                 } else {
-                    // inicializa com false para todas as aulas
                     attendanceState = courses.flatMap(c => c._datas.map(() => false));
                 }
 
                 // tarefas
                 const savedTasks = localStorage.getItem('studyTasks');
-                if (savedTasks) {
-                    tasks = JSON.parse(savedTasks);
-                } else {
-                    tasks = [
-                        'Revisar Materiais Betuminosos (apostila cap.2)',
-                        'Exercícios de Resistência dos Materiais I',
-                        'Ler norma de Instalações Hidrossanitárias',
-                        'Sistemas de Abastecimento: resumo'
-                    ];
-                }
+                tasks = savedTasks ? JSON.parse(savedTasks) : [
+                    'Revisar Materiais Betuminosos (apostila cap.2)',
+                    'Exercícios de Resistência dos Materiais I',
+                    'Ler norma de Instalações Hidrossanitárias',
+                    'Sistemas de Abastecimento: resumo'
+                ];
 
                 // tópicos
                 const savedTopics = localStorage.getItem('studyTopics');
-                if (savedTopics) {
-                    topics = JSON.parse(savedTopics);
-                } else {
-                    topics = [
-                        'TC0610 – propriedades dos ligantes',
-                        'TC0610 – ensaios de penetração',
-                        'TB0793 – diagrama tensão-deformação',
-                        'TB0793 – lei de Hooke',
-                        'TD0022 – ramais e colunas',
-                        'TD0022 – desconto e ventilação',
-                        'TD0023 – adutoras e estações',
-                        'TD0023 – demanda de água'
-                    ];
-                }
-
-                // garantir tamanhos consistentes
-                const totalAulas = courses.flatMap(c => c._datas).length;
-                if (attendanceState.length !== totalAulas) {
-                    attendanceState = courses.flatMap(c => c._datas.map(() => false));
-                }
+                topics = savedTopics ? JSON.parse(savedTopics) : [
+                    'TC0610 – propriedades dos ligantes',
+                    'TC0610 – ensaios de penetração',
+                    'TB0793 – diagrama tensão-deformação',
+                    'TB0793 – lei de Hooke',
+                    'TD0022 – ramais e colunas',
+                    'TD0022 – desconto e ventilação',
+                    'TD0023 – adutoras e estações',
+                    'TD0023 – demanda de água'
+                ];
             }
 
-            // salvar tudo
             function saveAll() {
                 localStorage.setItem('attendanceState', JSON.stringify(attendanceState));
                 localStorage.setItem('studyTasks', JSON.stringify(tasks));
@@ -574,7 +640,12 @@
 
             loadFromStorage();
 
-            // ---------- render cards das disciplinas ----------
+            // ---------- utilitários ----------
+            function todasAulas() {
+                return courses.flatMap(c => c._datas);
+            }
+
+            // ---------- render cards das disciplinas (com modal de horários) ----------
             const cardsContainer = document.getElementById('cardsContainer');
             function renderCards() {
                 cardsContainer.innerHTML = '';
@@ -599,86 +670,157 @@
                     cardsContainer.appendChild(card);
                 });
 
-                // eventos dos botões
                 document.querySelectorAll('.btn-modal').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         e.stopPropagation();
                         const { codigo, turma } = JSON.parse(btn.dataset.curso);
                         const curso = courses.find(c => c.codigo === codigo && c.turma === turma);
-                        abrirModal(curso);
+                        abrirModalHorario(curso);
                     });
                 });
             }
 
-            // ---------- modal ----------
-            const modalOverlay = document.getElementById('modalOverlay');
-            const modalTitle = document.getElementById('modalTitle');
-            const modalContent = document.getElementById('modalContent');
-            const closeModalBtn = document.getElementById('closeModalBtn');
+            // modal de horários completos (já existente)
+            const modalHorarioOverlay = document.getElementById('modalHorarioOverlay');
+            const modalHorarioTitle = document.getElementById('modalHorarioTitle');
+            const modalHorarioContent = document.getElementById('modalHorarioContent');
+            const closeHorarioModal = document.getElementById('closeHorarioModal');
 
-            function abrirModal(curso) {
-                modalTitle.innerText = `${curso.codigo} – ${curso.nome} (turma ${curso.turma})`;
+            function abrirModalHorario(curso) {
+                modalHorarioTitle.innerText = `${curso.codigo} – ${curso.nome} (turma ${curso.turma})`;
                 let html = '<ul class="lista-datas">';
                 if (curso._datas.length === 0) html += '<li>Nenhuma data encontrada</li>';
                 curso._datas.forEach(item => {
                     html += `<li><span class="data-dia">${item.dateStr} (${item.diaSemana})</span> <span class="data-hora">${item.horario}</span></li>`;
                 });
                 html += '</ul><p style="color:#475569; font-size:0.9rem;">📍 ' + curso.local + '</p>';
-                modalContent.innerHTML = html;
-                modalOverlay.style.display = 'flex';
+                modalHorarioContent.innerHTML = html;
+                modalHorarioOverlay.style.display = 'flex';
             }
 
-            closeModalBtn.addEventListener('click', () => modalOverlay.style.display = 'none');
-            modalOverlay.addEventListener('click', (e) => {
-                if (e.target === modalOverlay) modalOverlay.style.display = 'none';
+            closeHorarioModal.addEventListener('click', () => modalHorarioOverlay.style.display = 'none');
+            modalHorarioOverlay.addEventListener('click', (e) => {
+                if (e.target === modalHorarioOverlay) modalHorarioOverlay.style.display = 'none';
             });
 
-            // ---------- lista de frequência ----------
-            const frequenciaLista = document.getElementById('frequenciaLista');
-            const freqCounter = document.getElementById('freqCounter');
+            // ---------- frequência compacta: resumo por disciplina + próximas ----------
+            function renderFrequenciaCompacta() {
+                const aulas = todasAulas();
+                // resumo por disciplina
+                const stats = {};
+                courses.forEach(c => stats[c.codigo] = { nome: c.nome, total: c._datas.length, feitas: 0 });
+                aulas.forEach((aula, idx) => {
+                    if (attendanceState[idx]) stats[aula.cursoCodigo].feitas++;
+                });
 
-            function renderFrequencia() {
-                const todasAulas = courses.flatMap(c => c._datas);
-                if (todasAulas.length === 0) {
-                    frequenciaLista.innerHTML = '<div style="padding:1rem;">Nenhuma aula encontrada</div>';
-                    return;
+                const resumoDiv = document.getElementById('resumoDisciplinas');
+                resumoDiv.innerHTML = Object.values(stats).map(s => `
+                    <div class="disciplina-stats">
+                        <span class="stats-nome">${s.nome}</span>
+                        <span class="stats-contador">${s.feitas}/${s.total}</span>
+                        <button class="check-all-disciplina" data-codigo="${s.nome}">✓ marcar todas</button>
+                    </div>
+                `).join('');
+
+                // botões marcar todas por disciplina
+                document.querySelectorAll('.check-all-disciplina').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const nomeDisciplina = e.target.dataset.codigo;
+                        const indices = aulas.reduce((acc, aula, idx) => {
+                            if (aula.cursoNome === nomeDisciplina) acc.push(idx);
+                            return acc;
+                        }, []);
+                        indices.forEach(i => attendanceState[i] = true);
+                        saveAll();
+                        renderFrequenciaCompacta();
+                        renderModalFrequencia(); // atualiza modal se estiver aberta
+                    });
+                });
+
+                // contador geral
+                const totalFeitas = attendanceState.filter(Boolean).length;
+                document.getElementById('contadorGeral').innerText = `${totalFeitas}/${aulas.length}`;
+
+                // próximas 5 aulas (as que ainda não aconteceram? vamos pegar as primeiras não marcadas ou futuras)
+                const hoje = new Date();
+                hoje.setHours(0,0,0,0);
+                const futuras = aulas.filter((a, idx) => {
+                    // considerar não marcadas OU futuras (mas vamos mostrar as primeiras independente)
+                    return true; // só queremos as primeiras da lista
+                }).slice(0, 5); // pega as 5 primeiras (ordenadas por data)
+
+                const proximasDiv = document.getElementById('proximasAulasLista');
+                if (futuras.length === 0) {
+                    proximasDiv.innerHTML = '<div class="small-note">Nenhuma aula futura</div>';
+                } else {
+                    proximasDiv.innerHTML = futuras.map((aula, idx) => {
+                        const indexReal = aulas.findIndex(a => a.id === aula.id); // encontra índice real
+                        return `
+                            <div class="aula-item">
+                                <input type="checkbox" class="aula-check" data-index="${indexReal}" id="prox-${idx}" ${attendanceState[indexReal] ? 'checked' : ''}>
+                                <label for="prox-${idx}" class="aula-info">
+                                    <span class="aula-curso">${aula.cursoNome}</span> · 
+                                    <span class="aula-data">${aula.dateStr} (${aula.diaSemana}) ${aula.horario}</span>
+                                </label>
+                            </div>
+                        `;
+                    }).join('');
+
+                    // adicionar listeners nos checkboxes das próximas
+                    document.querySelectorAll('.aula-check').forEach(cb => {
+                        cb.addEventListener('change', (e) => {
+                            const index = e.target.dataset.index;
+                            attendanceState[index] = e.target.checked;
+                            saveAll();
+                            renderFrequenciaCompacta(); // atualiza contadores
+                            renderModalFrequencia(); // atualiza modal se aberta
+                        });
+                    });
                 }
+            }
 
-                let html = '';
-                todasAulas.forEach((aula, idx) => {
+            // ---------- modal de todas as aulas (lista completa) ----------
+            const modalFreqOverlay = document.getElementById('modalFreqOverlay');
+            const modalFreqLista = document.getElementById('modalFreqLista');
+            const closeFreqModal = document.getElementById('closeFreqModal');
+            const fecharModalFreq = document.getElementById('fecharModalFreq');
+
+            function renderModalFrequencia() {
+                const aulas = todasAulas();
+                let html = '<div style="max-height: 60vh; overflow-y: auto;">';
+                aulas.forEach((aula, idx) => {
                     html += `
-                        <div class="freq-item">
-                            <input type="checkbox" class="freq-check" data-index="${idx}" id="freq-${idx}" ${attendanceState[idx] ? 'checked' : ''}>
-                            <label for="freq-${idx}" class="freq-info">
-                                <span class="freq-curso">${aula.cursoNome}</span> · 
-                                <span class="freq-data">${aula.dateStr} (${aula.diaSemana}) ${aula.horario}</span>
+                        <div class="modal-freq-item">
+                            <input type="checkbox" class="modal-freq-check" data-index="${idx}" id="modal-freq-${idx}" ${attendanceState[idx] ? 'checked' : ''}>
+                            <label for="modal-freq-${idx}" class="modal-freq-info">
+                                <strong>${aula.cursoNome}</strong><br>
+                                <span style="color:#475569;">${aula.dateStr} (${aula.diaSemana}) ${aula.horario}</span>
                             </label>
                         </div>
                     `;
                 });
-                frequenciaLista.innerHTML = html;
+                html += '</div>';
+                modalFreqLista.innerHTML = html;
 
-                // atualizar contador
-                const total = todasAulas.length;
-                const feitas = attendanceState.filter(Boolean).length;
-                freqCounter.innerText = `${feitas} de ${total} presenças`;
-
-                // adicionar listeners nos checkboxes
-                document.querySelectorAll('.freq-check').forEach(cb => {
+                document.querySelectorAll('.modal-freq-check').forEach(cb => {
                     cb.addEventListener('change', (e) => {
                         const index = e.target.dataset.index;
                         attendanceState[index] = e.target.checked;
                         saveAll();
-                        renderFrequencia(); // atualiza contador
+                        renderFrequenciaCompacta(); // atualiza resumo
                     });
                 });
             }
 
-            document.getElementById('checkAllFreq').addEventListener('click', () => {
-                const todasAulas = courses.flatMap(c => c._datas);
-                attendanceState = todasAulas.map(() => true);
-                saveAll();
-                renderFrequencia();
+            document.getElementById('verTodasFrequencia').addEventListener('click', () => {
+                renderModalFrequencia();
+                modalFreqOverlay.style.display = 'flex';
+            });
+
+            closeFreqModal.addEventListener('click', () => modalFreqOverlay.style.display = 'none');
+            fecharModalFreq.addEventListener('click', () => modalFreqOverlay.style.display = 'none');
+            modalFreqOverlay.addEventListener('click', (e) => {
+                if (e.target === modalFreqOverlay) modalFreqOverlay.style.display = 'none';
             });
 
             // ---------- tarefas ----------
@@ -692,7 +834,6 @@
                     </li>
                 `).join('');
 
-                // eventos de checkbox das tarefas
                 document.querySelectorAll('.task-item input[type=checkbox]').forEach(cb => {
                     cb.addEventListener('change', (e) => {
                         const id = e.target.id;
@@ -700,7 +841,6 @@
                     });
                 });
 
-                // eventos de delete
                 document.querySelectorAll('.delete-btn[data-task-index]').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         const idx = e.target.dataset.taskIndex;
@@ -762,8 +902,6 @@
             // ---------- visão semanal ----------
             function renderWeekOverview() {
                 const weekRow = document.getElementById('weekOverview');
-                // datas da semana atual (fixa para exemplo: usar uma semana qualquer de março)
-                // na prática, seria dinâmico, mas para simplificar, mostra os dias da semana com base nas aulas
                 const weekDays = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB', 'DOM'];
                 const aulasPorDia = {};
                 weekDays.forEach(d => aulasPorDia[d] = []);
@@ -790,12 +928,11 @@
 
             // ---------- inicializar ----------
             renderCards();
-            renderFrequencia();
+            renderFrequenciaCompacta();
             renderTasks();
             renderTopics();
             renderWeekOverview();
 
-            // salvar ao sair (já salvamos a cada mudança)
             window.addEventListener('beforeunload', saveAll);
         })();
     </script>
