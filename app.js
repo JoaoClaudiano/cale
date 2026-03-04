@@ -133,6 +133,7 @@ setInterval(tick, 1000); tick();
 // ═══════════════════════════════════════════════
 // SEMANA
 // ═══════════════════════════════════════════════
+  
 let wkOff = 0;
 const DNAMES = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
 // code2py: JS getDay() → índice col (0=Seg…6=Dom)
