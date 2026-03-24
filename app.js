@@ -131,7 +131,8 @@ function doUndo() {
   const {type, item, index} = undoBuf;
   const arr = type === 'task' ? tasks : topics;
   arr.splice(index, 0, item);
-  sbSaveItem(type, item, index); // re-persiste no Supabase
+  // Recalcula sort_order de todos os itens após re-inserção para garantir consistência no Supabase
+  arr.forEach((t, i) => sbSaveItem(type, t, i));
   save(true); renderList(type); undoBuf = null;
 }
 
@@ -1060,19 +1061,23 @@ async function startApp() {
     document.getElementById('btnLogout').style.display = '';
     init();
     hideLoadOverlay();
-    // Alerta de disciplina crítica (1h do limite)
-    COURSES.forEach(c => {
-      const s = calcStats(c);
-      if (s.hRestantes <= 1 && !s.reprovado) {
-        setTimeout(() => showToast(`🚨 ${c.nome}: apenas ${Math.max(0,s.hRestantes)}h restante!`), 1500);
-      }
-    });
+    showCriticalAttendanceAlerts();
   } else {
     // Sem sessão: exibe login (app já renderizado em background)
     init();
     hideLoadOverlay();
     showLoginOverlay();
   }
+}
+
+// Exibe alertas para disciplinas com ≤1h restante antes de reprovar
+function showCriticalAttendanceAlerts() {
+  COURSES.forEach(c => {
+    const s = calcStats(c);
+    if (s.hRestantes <= 1 && !s.reprovado) {
+      setTimeout(() => showToast(`🚨 ${c.nome}: apenas ${Math.max(0, s.hRestantes)}h restante!`), 1500);
+    }
+  });
 }
 
 // ── Handler do formulário de login ──
@@ -1096,13 +1101,7 @@ document.getElementById('loginForm').addEventListener('submit', async e => {
     init();
     hideLoadOverlay();
     showToast('bem-vindo!');
-    // Alerta de disciplina crítica
-    COURSES.forEach(c => {
-      const s = calcStats(c);
-      if (s.hRestantes <= 1 && !s.reprovado) {
-        setTimeout(() => showToast(`🚨 ${c.nome}: apenas ${Math.max(0,s.hRestantes)}h restante!`), 1500);
-      }
-    });
+    showCriticalAttendanceAlerts();
   } else {
     errEl.textContent = errMsg;
     btn.disabled = false;
