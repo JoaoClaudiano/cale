@@ -1,6 +1,7 @@
 -- =============================================
 -- SCHEMA: rotina-estudos
 -- Execute no SQL Editor do Supabase (https://app.supabase.com → SQL Editor)
+-- Este script é idempotente: pode ser executado múltiplas vezes sem erros.
 -- =============================================
 
 -- Tabela de presenças (attendance)
@@ -46,6 +47,12 @@ create table if not exists topicos (
   sort_order  integer default 0,
   updated_at  timestamp with time zone default now()
 );
+
+-- =============================================
+-- MIGRAÇÕES — adiciona colunas ausentes em tabelas já existentes
+-- =============================================
+alter table tarefas add column if not exists sort_order integer default 0;
+alter table topicos add column if not exists sort_order integer default 0;
 
 -- =============================================
 -- ROW LEVEL SECURITY (RLS)
