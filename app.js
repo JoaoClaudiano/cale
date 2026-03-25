@@ -181,6 +181,23 @@ async function sbLoad() {
       sb.from('topicos').select('*').eq('user_id', uid).order('sort_order'),
     ]);
 
+    if (pRes.error) {
+      console.error('Erro ao carregar presenças:', pRes.error);
+      return false;
+    }
+    if (eRes.error) {
+      console.error('Erro ao carregar eventos:', eRes.error);
+      return false;
+    }
+    if (tRes.error) {
+      console.error('Erro ao carregar tarefas:', tRes.error);
+      return false;
+    }
+    if (toRes.error) {
+      console.error('Erro ao carregar tópicos:', toRes.error);
+      return false;
+    }
+
     if (pRes.data) {
       att = {};
       pRes.data.forEach(p => { att[p.aula_id] = p.presente; });
@@ -203,6 +220,8 @@ async function sbLoad() {
       topics = toRes.data.map(t => ({ id: t.id, text: t.text, checked: t.checked }));
     }
 
+    // Persiste no cache local para uso offline
+    save(true);
     return true;
   } catch (err) {
     console.error('Erro ao carregar do Supabase:', err);
@@ -221,7 +240,7 @@ function sbSaveAtt(aulaId, presente) {
 
 function sbSaveEvent(ev) {
   if (!sb || !supaUser) return;
-  const dateStr = ev.date instanceof Date ? ev.date.toISOString().slice(0, 10) : ev.date;
+  const dateStr = fmtDateLocal(ev.date);
   sb.from('eventos')
     .upsert({ id: ev.id, user_id: supaUser.id, nome: ev.nome,
               date: dateStr, ini: ev.ini, fim: ev.fim,
@@ -264,7 +283,7 @@ async function sbFullSync() {
     if (customEvents.length) {
       await sb.from('eventos').insert(customEvents.map(e => ({
         id: e.id, user_id: uid, nome: e.nome,
-        date: e.date instanceof Date ? e.date.toISOString().slice(0, 10) : e.date,
+        date: fmtDateLocal(e.date),
         ini: e.ini, fim: e.fim, type: e.type, cor: e.cor, note: e.note || ''
       })));
     }
@@ -532,6 +551,16 @@ function parseDateLocal(str) {
   const [y,m,d] = str.split('-').map(Number);
   return new Date(y, m-1, d);
 }
+
+// Formata Date como 'YYYY-MM-DD' usando hora local (evita desvio de UTC)
+function fmtDateLocal(d) {
+  if (!(d instanceof Date)) return d;
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 
 function renderCalendar() {
   const days    = getWeekDates(wkOff);
@@ -1047,6 +1076,18 @@ async function startApp() {
   // Carrega preferências (dark mode) do localStorage imediatamente
   load();
 
+  // Mantém supaUser atualizado quando o token é renovado automaticamente pelo Supabase.
+  // startApp() é chamado uma única vez, portanto o listener persiste durante toda a sessão.
+  if (sb) {
+    sb.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        supaUser = session.user;
+      } else if (event === 'SIGNED_OUT') {
+        supaUser = null;
+      }
+    });
+  }
+
   showLoadOverlay();
   const hasSession = await checkSession();
 
@@ -1131,6 +1172,27 @@ setInterval(() => {
   renderAttendance();
   updateFooter();
 }, 60000);
+
+// Sincronização automática com Supabase a cada 30 segundos
+// Garante que alterações feitas em outros dispositivos apareçam rapidamente
+let _syncing = false;
+setInterval(async () => {
+  if (!sb || !supaUser || _syncing) return;
+  _syncing = true;
+  try {
+    const ok = await sbLoad();
+    if (ok) {
+      renderCalendar();
+      renderSemProg();
+      renderAttendance();
+      renderList('task');
+      renderList('topic');
+      updateFooter();
+    }
+  } finally {
+    _syncing = false;
+  }
+}, 30000);
 
 startApp();
 
