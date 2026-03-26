@@ -110,20 +110,26 @@
   </form>
   <p class="login-hint">deixe em branco para entrar como convidado · preencha para sincronizar com a nuvem</p>
 
-  <!-- Magic Link (passwordless) ─────────────────────────────────────── -->
+  <!-- Magic Link toggle -->
   <button class="magic-toggle" id="magicToggle" type="button">criar conta</button>
+</div>
 
-  <div class="magic-section" id="magicSection" hidden>
-    <div class="magic-divider"><span>entrar sem senha</span></div>
+<!-- Magic Link modal -->
+<div class="modal-bg" id="magicModal">
+  <div class="modal" style="max-width:360px">
+    <button class="modal-close" id="magicModalClose" type="button" aria-label="Fechar">×</button>
+    <h3>criar conta · entrar sem senha</h3>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:1rem">Informe seu e-mail e enviaremos um link mágico para você acessar o app sem precisar de senha.</p>
     <div class="form-group">
       <label>E-mail</label>
       <input class="form-input" type="email" id="magicEmail" placeholder="seu@email.com" autocomplete="email">
     </div>
     <div class="login-err" id="magicErr"></div>
-    <button class="btn-save login-submit" id="magicBtn" type="button">Enviar link mágico</button>
     <p class="magic-ok" id="magicOk" hidden>✓ link enviado · verifique sua caixa de entrada</p>
+    <div class="modal-footer">
+      <button class="btn-save" id="magicBtn" type="button">Enviar link mágico</button>
+    </div>
   </div>
-</div>
 
 <footer>
   <span class="finfo">flow.planner · sistema acadêmico pessoal</span>
@@ -194,17 +200,28 @@
   });
 
   // ── Magic Link (passwordless) ────────────────────────────────────────────
-  const magicToggle  = document.getElementById('magicToggle');
-  const magicSection = document.getElementById('magicSection');
-  const magicBtn     = document.getElementById('magicBtn');
-  const magicErrEl   = document.getElementById('magicErr');
-  const magicOkEl    = document.getElementById('magicOk');
+  const magicToggle    = document.getElementById('magicToggle');
+  const magicModal     = document.getElementById('magicModal');
+  const magicModalClose = document.getElementById('magicModalClose');
+  const magicBtn       = document.getElementById('magicBtn');
+  const magicErrEl     = document.getElementById('magicErr');
+  const magicOkEl      = document.getElementById('magicOk');
 
-  magicToggle.addEventListener('click', () => {
-    const open = !magicSection.hidden;
-    magicSection.hidden = open;
-    magicToggle.textContent = open ? 'criar conta' : 'fechar';
-  });
+  function openMagicModal() {
+    magicModal.classList.add('open');
+    document.getElementById('magicEmail').focus();
+  }
+  function closeMagicModal() {
+    magicModal.classList.remove('open');
+    magicErrEl.textContent = '';
+    magicOkEl.hidden = true;
+    document.getElementById('magicEmail').value = '';
+  }
+
+  magicToggle.addEventListener('click', openMagicModal);
+  magicModalClose.addEventListener('click', closeMagicModal);
+  magicModal.addEventListener('click', e => { if (e.target === magicModal) closeMagicModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMagicModal(); });
 
   magicBtn.addEventListener('click', async () => {
     const email = document.getElementById('magicEmail').value.trim();
