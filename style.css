@@ -427,7 +427,7 @@ footer { border-top: 1px solid var(--border); padding: .6rem 1.25rem; display: f
 .jellyfish-svg {
   width: 96px; height: auto; overflow: visible;
   filter: drop-shadow(0 8px 26px rgba(59,130,246,.30));
-  animation: jelly-float 4.0s ease-in-out infinite;
+  animation: jelly-float 5.4s ease-in-out infinite;
 }
 .jbell {
   fill: url(#jg-body);
@@ -448,7 +448,7 @@ footer { border-top: 1px solid var(--border); padding: .6rem 1.25rem; display: f
 .jbell-group {
   /* origin = horizontal center (60) and top (8) of the bell dome in SVG coordinates */
   transform-origin: 60px 8px;
-  animation: jelly-bell 4.0s ease-in-out infinite;
+  animation: jelly-bell 3.6s ease-in-out infinite;
 }
 .jt {
   fill: none;
@@ -458,18 +458,17 @@ footer { border-top: 1px solid var(--border); padding: .6rem 1.25rem; display: f
   stroke: rgba(186,230,253,.38); stroke-width: 0.75;
 }
 @keyframes jelly-float {
-  0%   { transform: rotate(-14deg) translateY(0); }
-  25%  { transform: rotate(-17deg) translateY(-6px); }
-  50%  { transform: rotate(-12deg) translateY(-13px); }
-  75%  { transform: rotate(-17deg) translateY(-6px); }
-  100% { transform: rotate(-14deg) translateY(0); }
+  0%   { transform: rotate(-14deg) translateY(0px); }
+  50%  { transform: rotate(-13deg) translateY(-14px); }
+  100% { transform: rotate(-14deg) translateY(0px); }
 }
 @keyframes jelly-bell {
-  0%, 100% { transform: scaleY(1)    scaleX(1);    }
-  18%       { transform: scaleY(.80) scaleX(1.06); }
-  38%       { transform: scaleY(1.05) scaleX(.97); }
-  58%       { transform: scaleY(.96) scaleX(1.02); }
-  78%       { transform: scaleY(1.01) scaleX(.99); }
+  /* Quick contraction → elastic over-expansion → damped settle → long rest */
+  0%, 50%, 100% { transform: scaleY(1)    scaleX(1);    }
+  8%            { transform: scaleY(.66) scaleX(1.17); }
+  18%           { transform: scaleY(1.11) scaleX(.93); }
+  28%           { transform: scaleY(.97) scaleX(1.02); }
+  38%           { transform: scaleY(1.01) scaleX(.99); }
 }
 .login-canvas {
   position: absolute; inset: 0;
