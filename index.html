@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>rotina · estudos</title>
+<title>flow.studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <!-- Supabase JS (CDN) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -13,7 +13,7 @@
 <body>
 <header>
   <div style="display:flex;align-items:center">
-    <span class="logo">rotina<b>·</b>estudos</span>
+    <span class="logo">flow<b>.</b>studio</span>
     <span class="clock" id="clock">00:00:00</span>
   </div>
   <div class="hright">
@@ -161,18 +161,19 @@
   <div class="jellyfish-wrap">
     <svg class="jellyfish-svg" viewBox="0 0 120 240" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <radialGradient id="jg-body" cx="50%" cy="30%" r="65%">
-          <stop offset="0%"   stop-color="#e0f7ff" stop-opacity="0.20"/>
-          <stop offset="55%"  stop-color="#7dd3fc" stop-opacity="0.09"/>
-          <stop offset="100%" stop-color="#2563eb" stop-opacity="0.04"/>
+        <radialGradient id="jg-body" cx="50%" cy="28%" r="68%">
+          <stop offset="0%"   stop-color="#e0f7ff" stop-opacity="0.22"/>
+          <stop offset="40%"  stop-color="#93c5fd" stop-opacity="0.11"/>
+          <stop offset="75%"  stop-color="#3b82f6" stop-opacity="0.07"/>
+          <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0.03"/>
         </radialGradient>
-        <radialGradient id="jg-glow" cx="40%" cy="28%" r="52%">
-          <stop offset="0%"   stop-color="#ffffff"  stop-opacity="0.48"/>
-          <stop offset="70%"  stop-color="#bae6fd"  stop-opacity="0.10"/>
+        <radialGradient id="jg-glow" cx="40%" cy="26%" r="54%">
+          <stop offset="0%"   stop-color="#ffffff"  stop-opacity="0.52"/>
+          <stop offset="60%"  stop-color="#bae6fd"  stop-opacity="0.13"/>
           <stop offset="100%" stop-color="#93c5fd"  stop-opacity="0"/>
         </radialGradient>
         <radialGradient id="jg-rim" cx="50%" cy="100%" r="55%">
-          <stop offset="0%"   stop-color="#7dd3fc" stop-opacity="0.55"/>
+          <stop offset="0%"   stop-color="#7dd3fc" stop-opacity="0.60"/>
           <stop offset="100%" stop-color="#bae6fd" stop-opacity="0"/>
         </radialGradient>
         <filter id="jf-glow" x="-30%" y="-30%" width="160%" height="160%">
@@ -180,23 +181,35 @@
           <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
       </defs>
-      <!-- Tentacles (rendered behind the bell, animated by JS) -->
-      <g class="jt-group">
-        <path class="jt"      id="jt1"/>
-        <path class="jt"      id="jt2"/>
-        <path class="jt"      id="jt3"/>
-        <path class="jt"      id="jt4"/>
-        <path class="jt"      id="jt5"/>
-        <path class="jt"      id="jt6"/>
-        <path class="jt"      id="jt7"/>
-        <path class="jt"      id="jt8"/>
-        <path class="jt jt-thin" id="jt9"/>
-        <path class="jt jt-thin" id="jt10"/>
-        <path class="jt jt-thin" id="jt11"/>
-      </g>
-      <!-- Bell (rendered in front of tentacles) -->
+      <!-- Bell group (contains tentacles behind, then bell in front) -->
       <g class="jbell-group">
+        <!-- Tentacles (rendered behind the bell) -->
+        <g class="jt-group">
+          <path class="jt"      id="jt1"/>
+          <path class="jt"      id="jt2"/>
+          <path class="jt"      id="jt3"/>
+          <path class="jt"      id="jt4"/>
+          <path class="jt"      id="jt5"/>
+          <path class="jt"      id="jt6"/>
+          <path class="jt"      id="jt7"/>
+          <path class="jt"      id="jt8"/>
+          <path class="jt jt-thin" id="jt9"/>
+          <path class="jt jt-thin" id="jt10"/>
+          <path class="jt jt-thin" id="jt11"/>
+        </g>
+        <!-- Bell body -->
         <path class="jbell" d="M 15,60 Q 12,8 60,8 Q 108,8 105,60 Q 98,70 91,60 Q 84,70 77,60 Q 71,68 65,60 Q 60,68 55,60 Q 49,68 43,60 Q 36,70 29,60 Q 22,70 15,60 Z"/>
+        <!-- Internal gonad structures (4 horseshoe shapes – Aurelia aurita style,
+             positioned in pairs at upper/lower halves of the bell interior) -->
+        <g class="jbell-gonads">
+          <ellipse cx="46" cy="33" rx="8.5" ry="5" transform="rotate(-22 46 33)"/>
+          <ellipse cx="74" cy="33" rx="8.5" ry="5" transform="rotate(22 74 33)"/>
+          <ellipse cx="44" cy="49" rx="7.5" ry="4.5" transform="rotate(18 44 49)"/>
+          <ellipse cx="76" cy="49" rx="7.5" ry="4.5" transform="rotate(-18 76 49)"/>
+        </g>
+        <!-- Rim gradient overlay -->
+        <path class="jbell-rim" d="M 15,60 Q 22,70 29,60 Q 36,70 43,60 Q 49,68 55,60 Q 60,68 65,60 Q 71,68 77,60 Q 84,70 91,60 Q 98,70 105,60"/>
+        <!-- Top glow highlight -->
         <ellipse class="jbell-glow" cx="60" cy="30" rx="32" ry="22"/>
         <ellipse class="jbell-spot" cx="46" cy="21" rx="9" ry="6" transform="rotate(-15 46 21)"/>
         <ellipse class="jbell-spot jbell-spot2" cx="71" cy="35" rx="5" ry="3.5" transform="rotate(10 71 35)"/>
@@ -204,7 +217,7 @@
     </svg>
   </div>
   <div class="login-card">
-    <div class="login-logo">rotina<b>·</b>estudos</div>
+    <div class="login-logo">flow<b>.</b>studio</div>
     <p class="login-sub">sistema pessoal de frequência acadêmica</p>
     <form id="loginForm" autocomplete="on">
       <div class="form-group">

@@ -3,7 +3,7 @@
   --text:#181816; --text2:#5a5652; --text3:#9a9690;
   --border:#dedad4; --border2:#c8c4bc;
   --accent:#2563eb; --accent-bg:#eff6ff; --accent2:#1d4ed8;
-  --mono:'DM Mono',monospace; --sans:'DM Sans',sans-serif;
+  --mono:'Space Mono',monospace; --sans:'Space Grotesk',sans-serif;
   --r:10px; --sh:0 1px 2px rgba(0,0,0,.06),0 3px 10px rgba(0,0,0,.05);
   --c1:#d97706; --c1b:#fef3c7; --c1d:#92400e;
   --c2:#2563eb; --c2b:#dbeafe; --c2d:#1e3a8a;
@@ -412,8 +412,18 @@ footer { border-top: 1px solid var(--border); padding: .6rem 1.25rem; display: f
 .jbell-glow { fill: url(#jg-glow); }
 .jbell-spot { fill: #fff; opacity: .18; }
 .jbell-spot2 { opacity: .12; }
+.jbell-gonads ellipse {
+  fill: rgba(147,197,253,.09);
+  stroke: rgba(147,197,253,.24); stroke-width: .6;
+}
+.jbell-rim {
+  fill: none;
+  stroke: url(#jg-rim); stroke-width: 1.4; stroke-linecap: round;
+  opacity: .55;
+}
 .jbell-group {
-  transform-box: fill-box; transform-origin: center top;
+  /* origin = horizontal center (60) and top (8) of the bell dome in SVG coordinates */
+  transform-origin: 60px 8px;
   animation: jelly-bell 4.0s ease-in-out infinite;
 }
 .jt {
@@ -424,11 +434,11 @@ footer { border-top: 1px solid var(--border); padding: .6rem 1.25rem; display: f
   stroke: rgba(186,230,253,.38); stroke-width: 0.75;
 }
 @keyframes jelly-float {
-  0%   { transform: rotate(-7deg) translateY(0); }
-  25%  { transform: rotate(-8deg) translateY(-6px); }
-  50%  { transform: rotate(-6deg) translateY(-13px); }
-  75%  { transform: rotate(-8deg) translateY(-6px); }
-  100% { transform: rotate(-7deg) translateY(0); }
+  0%   { transform: rotate(-14deg) translateY(0); }
+  25%  { transform: rotate(-17deg) translateY(-6px); }
+  50%  { transform: rotate(-12deg) translateY(-13px); }
+  75%  { transform: rotate(-17deg) translateY(-6px); }
+  100% { transform: rotate(-14deg) translateY(0); }
 }
 @keyframes jelly-bell {
   0%, 100% { transform: scaleY(1)    scaleX(1);    }
