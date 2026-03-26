@@ -221,7 +221,7 @@
   magicToggle.addEventListener('click', openMagicModal);
   magicModalClose.addEventListener('click', closeMagicModal);
   magicModal.addEventListener('click', e => { if (e.target === magicModal) closeMagicModal(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMagicModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && magicModal.classList.contains('open')) closeMagicModal(); });
 
   magicBtn.addEventListener('click', async () => {
     const email = document.getElementById('magicEmail').value.trim();

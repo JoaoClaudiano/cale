@@ -134,7 +134,7 @@
         body: JSON.stringify(data),
       });
       if (res.ok) {
-        status.style.color = 'var(--ok)';
+        status.style.color = 'var(--ok, #059669)';
         status.textContent = '✓ Mensagem enviada com sucesso!';
         form.reset();
       } else {
