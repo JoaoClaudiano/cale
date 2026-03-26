@@ -180,7 +180,6 @@ function doUndo() {
 // AUTENTICAÇÃO E SUPABASE
 // ═══════════════════════════════════════════════
 function showLoginOverlay()  { window.location.href = 'login.html'; }
-function hideLoginOverlay()  { /* handled by page navigation */ }
 function showLoadOverlay()   { document.getElementById('loadOverlay').classList.add('show'); }
 function hideLoadOverlay()   { document.getElementById('loadOverlay').classList.remove('show'); }
 
