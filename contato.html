@@ -132,7 +132,7 @@
       + '?subject=' + encodeURIComponent('[flow.planner] ' + subjectText)
       + '&body=' + body;
 
-    window.open(mailtoLink);
+    window.location.href = mailtoLink;
 
     status.style.color = 'var(--ok)';
     status.textContent = '✓ Abrindo seu cliente de e-mail…';

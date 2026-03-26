@@ -598,6 +598,7 @@ document.getElementById('newEvSave').addEventListener('click', () => {
 // CALENDÁRIO VERTICAL
 // ═══════════════════════════════════════════════
 const CAL_INI = 7, CAL_FIM = 21, SLOT = 48; // px/hora
+const CALENDAR_DRAG_THRESHOLD = 5; // px mínimos de movimento para iniciar drag
 
 // Lookup rápido: aulaId → { aula, curso }
 const AULA_MAP = {};
@@ -769,8 +770,7 @@ function initCalendarDrag() {
   if (!calScroll) return;
 
   document.querySelectorAll('.cal-ev[data-custom]').forEach(el => {
-    let ghost     = null;
-    const DRAG_THRESHOLD = 5; // px mínimos para iniciar drag
+    let ghost = null;
 
     el.addEventListener('pointerdown', function (e) {
       if (e.button && e.button !== 0) return;
@@ -822,8 +822,8 @@ function initCalendarDrag() {
 
       function onMove(e2) {
         if (!dragging) {
-          if (Math.abs(e2.clientX - startX) > DRAG_THRESHOLD ||
-              Math.abs(e2.clientY - startY) > DRAG_THRESHOLD) {
+          if (Math.abs(e2.clientX - startX) > CALENDAR_DRAG_THRESHOLD ||
+              Math.abs(e2.clientY - startY) > CALENDAR_DRAG_THRESHOLD) {
             startDrag();
           }
           return;
@@ -873,7 +873,7 @@ function initCalendarDrag() {
         const rawHour = CAL_INI + hours;
 
         // arredonda para o quarto de hora mais próximo (0, 15, 30, 45)
-        const totalMins = Math.round(rawHour * 4) * 15;
+        const totalMins = Math.round((rawHour * 60) / 15) * 15;
         const newIniH   = Math.max(CAL_INI, Math.min(CAL_FIM - 1, Math.floor(totalMins / 60)));
         const newIniM   = totalMins % 60;
 
