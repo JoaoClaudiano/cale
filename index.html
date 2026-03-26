@@ -462,32 +462,38 @@
 
 // ── Jellyfish tentacle wave animation ──────────────────────────────────────
 (function () {
-  const STEPS = 12;
+  const STEPS = 14;
   const defs = [
-    { id:'jt1',  x:19,  y:61, len:162, amp:9,  spd:1.00, ph:0.0  },
-    { id:'jt2',  x:29,  y:63, len:148, amp:10, spd:0.88, ph:0.85 },
-    { id:'jt3',  x:40,  y:64, len:170, amp:11, spd:1.05, ph:1.70 },
-    { id:'jt4',  x:52,  y:65, len:156, amp:10, spd:0.93, ph:2.55 },
-    { id:'jt5',  x:68,  y:65, len:156, amp:10, spd:0.93, ph:3.40 },
-    { id:'jt6',  x:80,  y:64, len:170, amp:11, spd:1.05, ph:4.25 },
-    { id:'jt7',  x:91,  y:63, len:148, amp:10, spd:0.88, ph:5.10 },
-    { id:'jt8',  x:101, y:61, len:162, amp:9,  spd:1.00, ph:5.95 },
-    { id:'jt9',  x:34,  y:63, len:178, amp:7,  spd:1.15, ph:1.20 },
-    { id:'jt10', x:60,  y:66, len:182, amp:7,  spd:1.20, ph:3.00 },
-    { id:'jt11', x:86,  y:63, len:178, amp:7,  spd:1.15, ph:4.80 },
+    { id:'jt1',  x:19,  y:61, len:155, amp:10, spd:1.00, ph:0.00, ph2:0.40, spd2:1.61, driftAmp:5, driftPh:0.0  },
+    { id:'jt2',  x:29,  y:63, len:142, amp:11, spd:0.84, ph:0.90, ph2:1.10, spd2:1.40, driftAmp:6, driftPh:1.1  },
+    { id:'jt3',  x:40,  y:64, len:165, amp:12, spd:1.07, ph:1.80, ph2:2.00, spd2:1.73, driftAmp:4, driftPh:2.3  },
+    { id:'jt4',  x:52,  y:65, len:150, amp:11, spd:0.91, ph:2.70, ph2:0.80, spd2:1.54, driftAmp:7, driftPh:3.5  },
+    { id:'jt5',  x:68,  y:65, len:150, amp:11, spd:0.95, ph:3.55, ph2:2.50, spd2:1.47, driftAmp:7, driftPh:4.7  },
+    { id:'jt6',  x:80,  y:64, len:165, amp:12, spd:1.09, ph:4.45, ph2:1.60, spd2:1.68, driftAmp:4, driftPh:0.8  },
+    { id:'jt7',  x:91,  y:63, len:142, amp:11, spd:0.86, ph:5.35, ph2:0.50, spd2:1.37, driftAmp:6, driftPh:1.9  },
+    { id:'jt8',  x:101, y:61, len:155, amp:10, spd:1.01, ph:6.20, ph2:3.10, spd2:1.58, driftAmp:5, driftPh:3.0  },
+    { id:'jt9',  x:34,  y:63, len:172, amp:8,  spd:1.18, ph:1.25, ph2:1.80, spd2:1.83, driftAmp:8, driftPh:0.4  },
+    { id:'jt10', x:60,  y:66, len:176, amp:8,  spd:1.21, ph:3.10, ph2:2.30, spd2:1.96, driftAmp:9, driftPh:2.1  },
+    { id:'jt11', x:86,  y:63, len:172, amp:8,  spd:1.16, ph:4.95, ph2:0.90, spd2:1.75, driftAmp:8, driftPh:1.5  },
   ];
 
   // IDs may not exist if the overlay hasn't rendered yet; filter silently for resilience
   const paths = defs.map(d => ({ ...d, el: document.getElementById(d.id) }))
                     .filter(d => d.el);
 
-  // AMP_POWER controls how fast amplitude grows toward the tip (< 1 = concave growth)
-  // DAMPING   slightly reduces amplitude at the very end so tips don't flail too wide
-  // WAVE_SPD  scales elapsed time → wave travel speed along the tentacle
-  // WAVE_FREQ number of full sine cycles visible along the tentacle length
-  const AMP_POWER = 0.55, DAMPING = 0.18, WAVE_SPD = 1.3, WAVE_FREQ = 3.6;
+  // AMP_POWER  controls amplitude growth toward tip (< 1 = concave, more natural)
+  // DAMPING    slightly softens tip flail
+  // WAVE_SPD   base speed multiplier for primary wave
+  // WAVE_FREQ  sine cycles visible along the tentacle
+  // WAVE2_RATIO secondary harmonic amplitude as a fraction of primary
+  // WAVE2_FREQ_RATIO secondary harmonic frequency relative to primary
+  // DRIFT_SPD  how fast the slow per-tentacle water-current drift oscillates
+  const AMP_POWER = 0.52, DAMPING = 0.16, WAVE_SPD = 1.1, WAVE_FREQ = 3.4;
+  const WAVE2_RATIO = 0.32, WAVE2_FREQ_RATIO = 0.6, DRIFT_SPD = 0.38;
 
-  function wavePath(tx, ty, length, amplitude, phase, t) {
+  function wavePath(tx, ty, length, amplitude, phase, spd, t, ph2, spd2, driftAmp, driftPh) {
+    // Slow independent drift per tentacle — simulates subtle water-current displacement
+    const drift = driftAmp * Math.sin(t * DRIFT_SPD + driftPh);
     let d = 'M ' + tx + ',' + ty;
     for (let i = 1; i <= STEPS; i++) {
       const frac   = i / STEPS;
@@ -496,8 +502,14 @@
       const cpAmp  = amplitude * Math.pow(cpFrac, AMP_POWER) * (1 - cpFrac * DAMPING);
       const ny     = ty + frac   * length;
       const cpY    = ty + cpFrac * length;
-      const nx     = tx + amp   * Math.sin(t * WAVE_SPD + phase + frac   * Math.PI * WAVE_FREQ);
-      const cpX    = tx + cpAmp * Math.sin(t * WAVE_SPD + phase + cpFrac * Math.PI * WAVE_FREQ);
+      // Primary wave + secondary harmonic (different freq & speed → organic non-repeating motion)
+      const w1n  = Math.sin(t * WAVE_SPD * spd  + phase + frac   * Math.PI * WAVE_FREQ);
+      const w2n  = Math.sin(t * WAVE_SPD * spd2 + ph2   + frac   * Math.PI * (WAVE_FREQ * WAVE2_FREQ_RATIO));
+      const w1cp = Math.sin(t * WAVE_SPD * spd  + phase + cpFrac * Math.PI * WAVE_FREQ);
+      const w2cp = Math.sin(t * WAVE_SPD * spd2 + ph2   + cpFrac * Math.PI * (WAVE_FREQ * WAVE2_FREQ_RATIO));
+      // Drift increases linearly from root (0) to tip (drift) so the attachment point is fixed
+      const nx  = tx + frac   * drift + amp   * (w1n  + WAVE2_RATIO * w2n);
+      const cpX = tx + cpFrac * drift + cpAmp * (w1cp + WAVE2_RATIO * w2cp);
       d += ' Q ' + cpX.toFixed(1) + ',' + cpY.toFixed(1)
                  + ' ' + nx.toFixed(1) + ',' + ny.toFixed(1);
     }
@@ -507,7 +519,10 @@
   function animate(ts) {
     const t = ts * 0.001;
     for (const tn of paths) {
-      tn.el.setAttribute('d', wavePath(tn.x, tn.y, tn.len, tn.amp, tn.ph, t * tn.spd));
+      tn.el.setAttribute('d', wavePath(
+        tn.x, tn.y, tn.len, tn.amp, tn.ph, tn.spd, t,
+        tn.ph2, tn.spd2, tn.driftAmp, tn.driftPh
+      ));
     }
     requestAnimationFrame(animate);
   }
