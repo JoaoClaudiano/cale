@@ -179,6 +179,9 @@ main { flex: 1; max-width: 1100px; width: 100%; margin: 0 auto; padding: 1.25rem
 .cal-ev[data-custom] { cursor: grab; }
 .cal-ev[data-custom]:active { cursor: grabbing; }
 .cal-ev.ev-past { opacity: .45; }
+.cal-ev.ev-cancelled { opacity: .4; }
+.cal-ev.ev-cancelled .ev-name { text-decoration: line-through; }
+.ev-cancelled-label { font-size: 10px; color: var(--text3); }
 .ev-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11px; }
 .ev-time { font-family: var(--mono); font-size: 10px; opacity: .65; }
 .ev-check { font-size: 10px; color: var(--ok); }
@@ -297,11 +300,17 @@ body.dark .cal-ev.c4 .ev-name { color: var(--c4); }
 .abadge.today { background: var(--accent); color: #fff; }
 .abadge.future { background: var(--surface3); color: var(--text3); border: 1px solid var(--border); }
 .abadge.falta { background: var(--warnb); color: var(--warn); }
+.abadge.cancelled { background: var(--surface3); color: var(--text3); border: 1px solid var(--border); }
 
 .att-footer { display: flex; align-items: center; justify-content: space-between; gap: .5rem; flex-wrap: wrap; padding: .6rem 1rem; border-top: 1px solid var(--border); background: var(--surface2); }
 .att-warn-txt { font-size: 11px; color: var(--warn); font-weight: 500; }
 .att-mark-btn { background: none; border: 1px solid var(--border); padding: 4px 10px; border-radius: 6px; font-size: 11px; color: var(--text2); cursor: pointer; font-family: var(--sans); transition: all .15s; }
 .att-mark-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: var(--accent); }
+.att-row-cancelled { opacity: .5; }
+.att-cancel-btn { margin-left: auto; background: none; border: none; cursor: pointer; font-size: 12px; color: var(--text3); padding: 0 2px; opacity: .45; flex-shrink: 0; }
+.att-cancel-btn:hover { opacity: 1; color: var(--warn); }
+.ep-cancel-btn { display: block; margin-top: .4rem; background: none; border: none; font-size: 11px; color: var(--text3); cursor: pointer; padding: 0; opacity: .65; font-family: var(--sans); }
+.ep-cancel-btn:hover { opacity: 1; }
 
 /* ─ LISTS ─ */
 .lists-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }

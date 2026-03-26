@@ -78,8 +78,9 @@ rebuildAulaMap();
 // ESTADO
 // ═══════════════════════════════════════════════
 const LS = { att:'v3_att', ev:'v3_ev', tasks:'v3_tasks', topics:'v3_topics', dark:'v3_dark',
-             userCourses:'v3_userCourses', archived:'v3_archived' };
+             userCourses:'v3_userCourses', archived:'v3_archived', cancelled:'v3_cancelled' };
 let att = {};           // { aulaId: bool }
+let cancelled = new Set(); // aulaIds de aulas canceladas (feriado, professor etc.)
 let customEvents = [];  // [{id,nome,date,ini,fim,type,cor,note}]
 let tasks  = [];        // [{id,text,checked}]
 let topics = [];        // [{id,text,checked}]
@@ -134,6 +135,7 @@ function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').re
 
 function load() {
   try { att = JSON.parse(localStorage.getItem(LS.att) || '{}'); } catch { att = {}; }
+  try { cancelled = new Set(JSON.parse(localStorage.getItem(LS.cancelled) || '[]')); } catch { cancelled = new Set(); }
   try { customEvents = JSON.parse(localStorage.getItem(LS.ev) || '[]'); } catch { customEvents = []; }
   // Restaurar datas como Date objects
   customEvents.forEach(e => { e.date = new Date(e.date); });
@@ -181,6 +183,7 @@ function load() {
 
 function save(quiet=false) {
   localStorage.setItem(LS.att, JSON.stringify(att));
+  localStorage.setItem(LS.cancelled, JSON.stringify([...cancelled]));
   // Serializar eventos com data ISO
   const evSerial = customEvents.map(e => ({...e, date: e.date instanceof Date ? e.date.toISOString() : e.date}));
   localStorage.setItem(LS.ev, JSON.stringify(evSerial));
@@ -485,15 +488,33 @@ function openAulaPopup(aulaId, rect) {
     <span>🔖 ${curso.id} · turma ${curso.turma}</span>
   `;
 
+  const isCancelled = cancelled.has(aulaId);
   const attDiv = document.getElementById('evPopupAtt');
   const cb = document.getElementById('evPopupCb');
+  const cancelBtn = document.getElementById('evPopupCancelBtn');
   attDiv.style.display = 'block';
-  cb.checked = att[aulaId] || false;
+  cb.checked = !isCancelled && (att[aulaId] || false);
+  cb.disabled = isCancelled;
   cb.onchange = () => {
     att[aulaId] = cb.checked;
     sbSaveAtt(aulaId, cb.checked);
     save(true); renderCalendar(); renderAttendance();
     showToast(cb.checked ? '✓ presença marcada' : 'presença desmarcada');
+  };
+
+  cancelBtn.textContent = isCancelled ? '↩ desfazer cancelamento' : '⊘ cancelar aula';
+  cancelBtn.onclick = () => {
+    if (cancelled.has(aulaId)) {
+      cancelled.delete(aulaId);
+      showToast('↩ cancelamento desfeito');
+    } else {
+      cancelled.add(aulaId);
+      att[aulaId] = false;
+      sbSaveAtt(aulaId, false);
+      showToast('⊘ aula cancelada');
+    }
+    save(true); renderCalendar(); renderAttendance();
+    openAulaPopup(aulaId, rect);
   };
 
   document.getElementById('evPopupActions').innerHTML = '';
@@ -742,15 +763,16 @@ function renderCalendar() {
       const durPx = (a.fim - a.ini)   * SLOT;
       const past  = isP || (isT && a.fim <= now.getHours());
       const chk   = att[a.id] || false;
+      const isCancelled = cancelled.has(a.id);
       const hasBuiltinCls = ['c1','c2','c3','c4'].includes(a.curso.cls);
       const colorStyle = hasBuiltinCls ? '' : `background:${a.curso.cor}1a;border-color:${a.curso.cor};`;
       const nameStyle  = hasBuiltinCls ? '' : `color:${a.curso.cor}`;
-      h += `<div class="cal-ev ${a.curso.cls||''}${past?' ev-past':''}"
+      h += `<div class="cal-ev ${a.curso.cls||''}${past?' ev-past':''}${isCancelled?' ev-cancelled':''}"
         style="top:${topPx}px;height:${durPx}px;${colorStyle}"
         data-aula="${a.id}">
         <div class="ev-name"${nameStyle?` style="${nameStyle}"`:''}>${esc(a.curso.nome)}</div>
         <div class="ev-time">${a.ini}h–${a.fim}h · ${a.horas}h</div>
-        ${chk ? `<div class="ev-check">✓ presente</div>` : ''}
+        ${isCancelled ? `<div class="ev-cancelled-label">⊘ cancelada</div>` : chk ? `<div class="ev-check">✓ presente</div>` : ''}
       </div>`;
     });
 
@@ -988,15 +1010,16 @@ document.addEventListener('keydown', e => {
 function calcStats(c) {
   const hoje = new Date(); hoje.setHours(0,0,0,0);
 
-  const aulasPast   = c._aulas.filter(a => a.date <= hoje);
-  const aulasFuture = c._aulas.filter(a => a.date >  hoje);
+  const aulasValidas = c._aulas.filter(a => !cancelled.has(a.id));
+  const aulasPast   = aulasValidas.filter(a => a.date <= hoje);
+  const aulasFuture = aulasValidas.filter(a => a.date >  hoje);
 
-  // horas presentes e horas de falta (só nas aulas já ocorridas)
+  // horas presentes e horas de falta (só nas aulas já ocorridas e não canceladas)
   const horasPresente = aulasPast.filter(a =>  att[a.id]).reduce((s,a) => s+a.horas, 0);
   const horasFalta    = aulasPast.filter(a => !att[a.id]).reduce((s,a) => s+a.horas, 0);
 
-  const totalH     = c._totalH;
-  const maxFaltasH = c._maxFaltasH;
+  const totalH     = aulasValidas.reduce((s,a) => s+a.horas, 0);
+  const maxFaltasH = Math.floor(totalH * 0.25);
 
   // Para exibir em "aulas": quantas aulas faltou
   const aulasFaltou = aulasPast.filter(a => !att[a.id]).length;
@@ -1058,11 +1081,11 @@ function renderAttendance() {
         <div class="att-summary-bar">
           <div class="att-stat">
             <span class="att-stat-label">C. Horária</span>
-            <span class="att-stat-val">${c._totalH}h</span>
+            <span class="att-stat-val">${s.totalH}h</span>
           </div>
           <div class="att-stat">
             <span class="att-stat-label">Limite faltas</span>
-            <span class="att-stat-val">≤ ${c._maxFaltasH}h (25%)</span>
+            <span class="att-stat-val">≤ ${s.maxFaltasH}h (25%)</span>
           </div>
           <div class="att-stat">
             <span class="att-stat-label">Horas faltadas</span>
@@ -1070,7 +1093,7 @@ function renderAttendance() {
           </div>
           <div class="att-stat">
             <span class="att-stat-label">Horas p/ reprovar</span>
-            <span class="att-stat-val ${s.hRestantes<=0?'danger':s.hRestantes<=c._maxFaltasH*0.3?'danger':''}">${Math.max(0,s.hRestantes)}h</span>
+            <span class="att-stat-val ${s.hRestantes<=0?'danger':s.hRestantes<=s.maxFaltasH*0.3?'danger':''}">${Math.max(0,s.hRestantes)}h</span>
           </div>
           <div class="att-stat">
             <span class="att-stat-label">Presença</span>
@@ -1099,29 +1122,47 @@ function renderAttendance() {
     c._aulas.forEach(aula => {
       const isPast   = aula.date <  hoje;
       const isToday  = aula.date.getTime() === hoje.getTime();
-      const checked  = att[aula.id] || false;
+      const isCancelled = cancelled.has(aula.id);
+      const checked  = !isCancelled && (att[aula.id] || false);
 
       const row = document.createElement('div');
-      row.className = 'att-row';
+      row.className = 'att-row' + (isCancelled ? ' att-row-cancelled' : '');
 
       let badge = '';
-      if      (isToday)            badge = `<span class="abadge today">hoje</span>`;
-      else if (!isPast)            badge = `<span class="abadge future">futuro</span>`;
-      else if (!checked)           badge = `<span class="abadge falta">falta</span>`;
+      if      (isCancelled)              badge = `<span class="abadge cancelled">cancelada</span>`;
+      else if (isToday)                  badge = `<span class="abadge today">hoje</span>`;
+      else if (!isPast)                  badge = `<span class="abadge future">futuro</span>`;
+      else if (!checked)                 badge = `<span class="abadge falta">falta</span>`;
 
       const WDAYS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
       row.innerHTML = `
-        <input type="checkbox" class="att-cb" data-id="${aula.id}" ${checked?'checked':''}>
+        <input type="checkbox" class="att-cb" data-id="${aula.id}" ${checked?'checked':''} ${isCancelled?'disabled':''}>
         <span class="att-row-date">${aula.date.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'})}</span>
         <span class="att-row-day">${WDAYS[aula.date.getDay()]}</span>
         <span class="att-row-h">${aula.ini}h–${aula.fim}h</span>
         <span class="att-row-hval">${aula.horas}h</span>
-        ${badge}`;
+        ${badge}
+        <button class="att-cancel-btn" data-id="${aula.id}" title="${isCancelled?'desfazer cancelamento':'cancelar aula'}">${isCancelled?'↩':'⊘'}</button>`;
       listEl.appendChild(row);
 
       row.querySelector('.att-cb').addEventListener('change', e => {
+        if (cancelled.has(aula.id)) return;
         att[aula.id] = e.target.checked;
         sbSaveAtt(aula.id, e.target.checked);
+        save(true); renderAttendance(); renderCalendar();
+      });
+
+      row.querySelector('.att-cancel-btn').addEventListener('click', e => {
+        e.stopPropagation();
+        if (cancelled.has(aula.id)) {
+          cancelled.delete(aula.id);
+          showToast('↩ cancelamento desfeito');
+        } else {
+          cancelled.add(aula.id);
+          att[aula.id] = false;
+          sbSaveAtt(aula.id, false);
+          showToast('⊘ aula cancelada');
+        }
         save(true); renderAttendance(); renderCalendar();
       });
     });
@@ -1140,7 +1181,7 @@ function renderAttendance() {
     }
     card.querySelector('.att-mark-btn').addEventListener('click', e => {
       e.stopPropagation();
-      c._aulas.filter(a => a.date <= hoje).forEach(a => {
+      c._aulas.filter(a => a.date <= hoje && !cancelled.has(a.id)).forEach(a => {
         att[a.id] = true;
         sbSaveAtt(a.id, true);
       });
