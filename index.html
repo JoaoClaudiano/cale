@@ -15,15 +15,13 @@
 <!-- Favicon — SVG (all modern browsers) -->
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <!-- Favicon — ICO fallback (legacy browsers) -->
-<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48" type="image/x-icon">
+<link rel="icon" href="favicon.ico" type="image/x-icon">
 
 <!-- Apple / iOS -->
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="apple-touch-icon" sizes="152x152" href="icon-152.png">
 <link rel="apple-touch-icon" sizes="167x167" href="icon-167.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="flow.planner">
 
 <!-- Windows / Microsoft -->
@@ -36,12 +34,15 @@
 <meta name="description" content="Controle de presenças e agenda acadêmica">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <!-- Supabase JS (CDN) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- SheetJS (XLSX) -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
-<body>
+<body class="page-fade">
 <header>
   <div style="display:flex;align-items:center">
     <span class="logo">flow<b>.</b>planner</span>
@@ -49,9 +50,9 @@
   </div>
   <div class="hright">
     <span id="hdrBadge"></span>
-    <button class="hbtn" id="btnDark">☀ claro</button>
-    <button class="hbtn" id="btnExport">↑ exportar</button>
-    <button class="hbtn" id="btnImport">↓ importar</button>
+    <button class="hbtn" id="btnDark" data-tooltip="Alternar tema claro/escuro">☀ claro</button>
+    <button class="hbtn" id="btnExport" data-tooltip="Exportar dados para Excel (.xlsx)">↑ exportar</button>
+    <button class="hbtn" id="btnImport" data-tooltip="Importar dados de Excel (.xlsx)">↓ importar</button>
     <span id="offlineBadge" class="offline-badge" style="display:none">● offline</span>
     <span id="pendingBadge" class="pending-badge" style="display:none"></span>
     <span id="syncBadge" class="sync-badge" style="display:none"></span>
@@ -74,6 +75,7 @@
         <span id="semLabel">—</span>
         <div class="sembar"><div class="semfill" id="semFill" style="width:0%"></div></div>
         <span id="semPct">—</span>
+        <button class="warr" id="btnSemConfig" data-tooltip="Configurar período do semestre" style="width:20px;height:20px;font-size:11px;">⚙</button>
       </div>
     </div>
     <div class="cal-wrap"><div class="cal-scroll"><div class="cal-inner" id="calInner"></div></div></div>
@@ -118,6 +120,7 @@
 <footer>
   <span class="finfo" id="footerInfo">—</span>
   <nav class="fnav">
+    <a href="como-funciona.html">como funciona</a>
     <a href="sobre.html">sobre</a>
     <a href="status.html">status</a>
     <a href="contato.html">contato</a>
@@ -198,7 +201,7 @@
   </div>
 </div>
 
-<input type="file" id="importFile" accept=".json" style="display:none">
+<input type="file" id="importFile" accept=".xlsx" style="display:none">
 
 <!-- MODAL adicionar/editar disciplina -->
 <div class="modal-bg" id="addCourseModal">
@@ -265,7 +268,55 @@
 
 <!-- OVERLAY DE CARREGAMENTO -->
 <div class="load-overlay" id="loadOverlay">
-  <div class="load-spin"></div>
+  <div class="load-jelly">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="64" height="64" class="load-jelly-svg">
+      <defs>
+        <radialGradient id="lg-bell" cx="40%" cy="30%" r="65%">
+          <stop offset="0%" stop-color="#c4b5fd"/>
+          <stop offset="100%" stop-color="#6d28d9"/>
+        </radialGradient>
+      </defs>
+      <g class="jelly-float">
+        <path d="M 20 52 Q 20 30 50 27 Q 80 30 80 52 Q 80 60 50 62 Q 20 60 20 52 Z" fill="url(#lg-bell)"/>
+        <path d="M 30 60 Q 25 72 28 83" stroke="#a78bfa" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M 40 62 Q 37 75 40 86" stroke="#8b5cf6" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M 50 63 Q 50 76 50 87" stroke="#a78bfa" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <path d="M 60 62 Q 63 75 60 86" stroke="#8b5cf6" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M 70 60 Q 75 72 72 83" stroke="#a78bfa" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <circle cx="40" cy="43" r="3" fill="#e0e7ff" opacity="0.9"/>
+        <circle cx="52" cy="38" r="2.5" fill="#ddd6fe" opacity="0.8"/>
+        <circle cx="62" cy="44" r="3" fill="#e0e7ff" opacity="0.85"/>
+      </g>
+    </svg>
+    <div class="load-label">carregando…</div>
+  </div>
+</div>
+
+<!-- MODAL configurar semestre -->
+<div class="modal-bg" id="semConfigModal">
+  <div class="modal" style="max-width:380px">
+    <button class="modal-close" id="semConfigClose">×</button>
+    <h3>Configurar Semestre</h3>
+    <p style="font-size:12px;color:var(--text3);margin:.4rem 0 1rem">Configure o período letivo. Ao atingir a data de término, todas as disciplinas serão arquivadas automaticamente.</p>
+    <div class="form-group">
+      <label>Nome do Semestre</label>
+      <input class="form-input" id="semNome" placeholder="ex: 2026.1 — 1º Semestre" autocomplete="off" maxlength="50">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Início</label>
+        <input class="form-input" type="date" id="semIni">
+      </div>
+      <div class="form-group">
+        <label>Término</label>
+        <input class="form-input" type="date" id="semFim">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="semConfigCancel">Cancelar</button>
+      <button class="btn-save" id="semConfigSave">Salvar</button>
+    </div>
+  </div>
 </div>
 
 <script src="db.js"></script>

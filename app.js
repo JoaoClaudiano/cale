@@ -78,7 +78,8 @@ rebuildAulaMap();
 // ESTADO
 // ═══════════════════════════════════════════════
 const LS = { att:'v3_att', ev:'v3_ev', tasks:'v3_tasks', topics:'v3_topics', dark:'v3_dark',
-             userCourses:'v3_userCourses', archived:'v3_archived', cancelled:'v3_cancelled' };
+             userCourses:'v3_userCourses', archived:'v3_archived', cancelled:'v3_cancelled',
+             semConfig:'v3_semConfig' };
 let att = {};           // { aulaId: bool }
 let cancelled = new Set(); // aulaIds de aulas canceladas (feriado, professor etc.)
 let customEvents = [];  // [{id,nome,date,ini,fim,type,cor,note}]
@@ -181,6 +182,7 @@ function load() {
     document.body.classList.add('dark');
     document.getElementById('btnDark').textContent = '☀ claro';
   }
+  loadSemConfig();
 }
 
 function save(quiet=false) {
@@ -235,8 +237,18 @@ function doUndo() {
 // AUTENTICAÇÃO E SUPABASE
 // ═══════════════════════════════════════════════
 function showLoginOverlay()  { window.location.href = 'login.html'; }
-function showLoadOverlay()   { document.getElementById('loadOverlay').classList.add('show'); }
-function hideLoadOverlay()   { document.getElementById('loadOverlay').classList.remove('show'); }
+function showLoadOverlay()   {
+  const el = document.getElementById('loadOverlay');
+  el.style.opacity = '1';
+  el.classList.remove('hide');
+  el.classList.add('show');
+}
+function hideLoadOverlay()   {
+  const el = document.getElementById('loadOverlay');
+  el.classList.add('hide');
+  setTimeout(() => { el.classList.remove('show', 'hide'); }, 320);
+  document.body.classList.add('page-ready');
+}
 
 async function checkSession() {
   if (!sb) return false;
@@ -451,8 +463,24 @@ function getWeekDates(off=0) {
 
 function fmt(d) { return d.toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit'}); }
 
+// ─ Configuração de semestre (salva no localStorage) ─
+let semConfig = null; // { nome, ini, fim } strings ISO
+
+function loadSemConfig() {
+  try { semConfig = JSON.parse(localStorage.getItem(LS.semConfig) || 'null'); } catch { semConfig = null; }
+}
+
+function getSemDates() {
+  if (semConfig && semConfig.ini && semConfig.fim) {
+    return { ini: new Date(semConfig.ini), fim: new Date(semConfig.fim) };
+  }
+  // Fallback padrão
+  return { ini: new Date(2026,2,2), fim: new Date(2026,6,7) };
+}
+
 function renderSemProg() {
-  const ini = new Date(2026,2,2), fim = new Date(2026,6,7), now = new Date();
+  const { ini, fim } = getSemDates();
+  const now = new Date();
   const total = fim - ini, elapsed = Math.min(Math.max(now - ini, 0), total);
   const pct = total > 0 ? elapsed / total * 100 : 0;
   const semTot = Math.ceil(total / (7*86400000));
@@ -461,7 +489,57 @@ function renderSemProg() {
     now < ini ? 'antes do início' : now > fim ? 'encerrado' : `semana ${Math.max(1,semAt)}/${semTot}`;
   document.getElementById('semFill').style.width = pct.toFixed(1) + '%';
   document.getElementById('semPct').textContent = pct.toFixed(0) + '%';
+
+  // Auto-arquivar disciplinas quando semestre termina
+  if (now > fim) autoArchiveAllCourses();
 }
+
+function autoArchiveAllCourses() {
+  const toArchive = [...COURSES];
+  if (!toArchive.length) return;
+  let archived = false;
+  toArchive.forEach(c => {
+    const alreadyArchived = archivedCourses.some(a => a.courseId === c.id);
+    if (!alreadyArchived) { archiveCourse(c); archived = true; }
+  });
+  if (archived) showToast('Semestre encerrado — disciplinas arquivadas automaticamente');
+}
+
+// ─ Modal de configuração do semestre ─
+function openSemConfigModal() {
+  const { ini, fim } = getSemDates();
+  document.getElementById('semNome').value = semConfig ? (semConfig.nome || '') : '2026.1 — 1º Semestre';
+  document.getElementById('semIni').value = ini.toISOString().slice(0,10);
+  document.getElementById('semFim').value = fim.toISOString().slice(0,10);
+  document.getElementById('semConfigModal').classList.add('open');
+  document.getElementById('semNome').focus();
+}
+
+function closeSemConfigModal() {
+  document.getElementById('semConfigModal').classList.remove('open');
+}
+
+document.getElementById('btnSemConfig').addEventListener('click', openSemConfigModal);
+document.getElementById('semConfigClose').addEventListener('click', closeSemConfigModal);
+document.getElementById('semConfigCancel').addEventListener('click', closeSemConfigModal);
+document.getElementById('semConfigModal').addEventListener('mousedown', e => {
+  if (e.target === document.getElementById('semConfigModal')) closeSemConfigModal();
+});
+
+document.getElementById('semConfigSave').addEventListener('click', () => {
+  const nome  = document.getElementById('semNome').value.trim();
+  const iniS  = document.getElementById('semIni').value;
+  const fimS  = document.getElementById('semFim').value;
+  if (!iniS || !fimS) { showToast('preencha as datas'); return; }
+  const iniD = new Date(iniS + 'T00:00:00');
+  const fimD = new Date(fimS + 'T00:00:00');
+  if (fimD <= iniD) { showToast('a data de término deve ser após o início'); return; }
+  semConfig = { nome, ini: iniS, fim: fimS };
+  localStorage.setItem(LS.semConfig, JSON.stringify(semConfig));
+  closeSemConfigModal();
+  renderSemProg();
+  showToast('semestre configurado');
+});
 
 // ═══════════════════════════════════════════════
 // POPUP DE EVENTO
@@ -779,12 +857,17 @@ function renderCalendar() {
       const safeCor    = sanitizeCor(a.curso.cor);
       const colorStyle = hasBuiltinCls ? '' : `background:${safeCor}1a;border-color:${safeCor};`;
       const nameStyle  = hasBuiltinCls ? '' : `color:${safeCor}`;
+      const trend = calcTrend(a.curso);
+      const trendHtml = trend === 'up'   ? '<span class="ev-trend trend-up">↑</span>' :
+                        trend === 'down' ? '<span class="ev-trend trend-down">↓</span>' :
+                        trend === 'bad'  ? '<span class="ev-trend trend-bad">↓↓</span>' : '';
       h += `<div class="cal-ev ${a.curso.cls||''}${past?' ev-past':''}${isCancelled?' ev-cancelled':''}"
         style="top:${topPx}px;height:${durPx}px;${colorStyle}"
         data-aula="${a.id}">
         <div class="ev-name"${nameStyle?` style="${nameStyle}"`:''}>${esc(a.curso.nome)}</div>
         <div class="ev-time">${a.ini}h–${a.fim}h · ${a.horas}h</div>
         ${isCancelled ? `<div class="ev-cancelled-label">⊘ cancelada</div>` : chk ? `<div class="ev-check">✓ presente</div>` : ''}
+        ${trendHtml}
       </div>`;
     });
 
@@ -819,19 +902,51 @@ function renderCalendar() {
 
   // ── CLICK em eventos custom — tratado pelo initCalendarDrag (inclui click) ──
 
-  // ── CLICK em espaço vazio → novo evento ──
+  // ── CLICK em espaço vazio → menu de opções ──
   document.querySelectorAll('.cal-hl').forEach(hl => {
     hl.addEventListener('click', e => {
       if (e.target !== hl) return;
       closePopup();
       const hour = parseInt(hl.dataset.hour);
       const dateStr = hl.dataset.date || hl.closest('.cal-dcol').dataset.date;
-      document.getElementById('evDate').value = dateStr || new Date().toISOString().slice(0,10);
+      const prefillDate = dateStr || new Date().toISOString().slice(0,10);
       const hStr = hour < 10 ? '0'+hour : ''+hour;
       const h1 = (hour+1) < 10 ? '0'+(hour+1) : ''+(hour+1);
-      document.getElementById('evStart').value = hStr + ':00';
-      document.getElementById('evEnd').value   = (hour < CAL_FIM - 1) ? h1 + ':00' : hStr + ':50';
-      openNewEvModal();
+      const startVal = hStr + ':00';
+      const endVal   = (hour < CAL_FIM - 1) ? h1 + ':00' : hStr + ':50';
+
+      // Remove escolha anterior
+      const old = document.getElementById('slotChoice'); if (old) old.remove();
+
+      const choice = document.createElement('div');
+      choice.id = 'slotChoice';
+      choice.className = 'slot-choice';
+      const vw = window.innerWidth, vh = window.innerHeight;
+      let cx = e.clientX + 8, cy = e.clientY;
+      if (cx + 180 > vw) cx = e.clientX - 180;
+      if (cy + 100 > vh) cy = e.clientY - 100;
+      choice.style.cssText = `left:${cx}px;top:${cy}px;`;
+      choice.innerHTML = `
+        <button class="slot-choice-btn" id="slotChoiceEv">📌 Novo evento</button>
+        <button class="slot-choice-btn" id="slotChoiceDis">🎓 Adicionar disciplina</button>`;
+      document.body.appendChild(choice);
+
+      const removeChoice = () => choice.remove();
+      document.addEventListener('mousedown', function rm(e2) {
+        if (!choice.contains(e2.target)) { removeChoice(); document.removeEventListener('mousedown', rm); }
+      });
+
+      document.getElementById('slotChoiceEv').onclick = () => {
+        removeChoice();
+        document.getElementById('evDate').value = prefillDate;
+        document.getElementById('evStart').value = startVal;
+        document.getElementById('evEnd').value   = endVal;
+        openNewEvModal();
+      };
+      document.getElementById('slotChoiceDis').onclick = () => {
+        removeChoice();
+        openAddCourseModal();
+      };
     });
   });
 
@@ -1021,6 +1136,21 @@ document.addEventListener('keydown', e => {
 // ═══════════════════════════════════════════════
 // PRESENÇA — BASEADA EM HORAS
 // ═══════════════════════════════════════════════
+
+// Calcula tendência de frequência: 'up', 'down', 'bad', ou null
+function calcTrend(c) {
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const passadas = c._aulas.filter(a => !cancelled.has(a.id) && a.date <= hoje);
+  if (passadas.length < 1) return null;
+  const ultima   = passadas[passadas.length - 1];
+  const penultima = passadas.length >= 2 ? passadas[passadas.length - 2] : null;
+  const ultimaChk     = att[ultima.id] || false;
+  const penultimaChk  = penultima ? (att[penultima.id] || false) : null;
+  if (!ultimaChk && penultimaChk === false) return 'bad';   // 2+ faltas seguidas
+  if (!ultimaChk) return 'down';                             // última foi falta
+  if (ultimaChk && penultimaChk === false) return 'up';     // recuperando
+  return null; // em dia
+}
 function calcStats(c) {
   const hoje = new Date(); hoje.setHours(0,0,0,0);
 
@@ -1073,6 +1203,11 @@ function renderAttendance() {
     const fillColor = s.reprovado || s.emRisco ? 'var(--warn)' : safeCor;
     const pctFill   = Math.max(0, Math.min(s.pctPresenca, 100));
 
+    const trend = calcTrend(c);
+    const trendBadge = trend === 'up'   ? '<span class="trend-up"   title="Frequência melhorando ↑">↑</span>' :
+                       trend === 'down' ? '<span class="trend-down" title="Faltou na última aula ↓">↓</span>' :
+                       trend === 'bad'  ? '<span class="trend-bad"  title="Múltiplas faltas seguidas ↓↓">↓↓</span>' : '';
+
     const card = document.createElement('div');
     card.className = 'att-card' + (openSet.has(c.id) ? ' open' : '');
     card.dataset.c = c.id;
@@ -1082,6 +1217,7 @@ function renderAttendance() {
         <div class="att-dot" style="background:${safeCor}"></div>
         <span class="att-name">${esc(c.nome)}</span>
         <span class="att-code">${esc(c.id)}</span>
+        ${trendBadge}
         <span class="att-hbadge">${c._totalH}h</span>
         <span class="att-pill ${pillCls}">${pillTxt}</span>
         <button class="att-arch-btn" data-c="${esc(c.id)}" title="arquivar disciplina">📦</button>
@@ -1633,14 +1769,42 @@ document.getElementById('archivedDelete').addEventListener('click', () => {
 });
 
 // ═══════════════════════════════════════════════
-// EXPORT / IMPORT
+// EXPORT / IMPORT (xlsx)
 // ═══════════════════════════════════════════════
 function doExport() {
-  const evSerial = customEvents.map(e => ({...e, date: e.date instanceof Date ? e.date.toISOString() : e.date}));
-  const data = JSON.stringify({v:4, att, ev: evSerial, tasks, topics}, null, 2);
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([data], {type:'application/json'}));
-  a.download = 'rotina-estudos.json'; a.click(); URL.revokeObjectURL(a.href);
+  if (typeof XLSX === 'undefined') { showToast('biblioteca xlsx não carregada'); return; }
+  const wb = XLSX.utils.book_new();
+
+  // Aba 1: Presença (att)
+  const attRows = [['aulaId', 'presente']];
+  Object.entries(att).forEach(([id, v]) => attRows.push([id, v ? 'sim' : 'não']));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(attRows), 'Presença');
+
+  // Aba 2: Eventos
+  const evRows = [['id','nome','data','início','fim','tipo','cor','nota']];
+  customEvents.forEach(e => {
+    const d = e.date instanceof Date ? e.date.toISOString().slice(0,10) : e.date;
+    evRows.push([e.id, e.nome, d, e.ini, e.fim, e.type, e.cor, e.note||'']);
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(evRows), 'Eventos');
+
+  // Aba 3: Tarefas
+  const taskRows = [['id','texto','concluída']];
+  tasks.forEach(t => taskRows.push([t.id, t.text, t.checked ? 'sim' : 'não']));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(taskRows), 'Tarefas');
+
+  // Aba 4: Tópicos
+  const topicRows = [['id','texto','concluído']];
+  topics.forEach(t => topicRows.push([t.id, t.text, t.checked ? 'sim' : 'não']));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(topicRows), 'Tópicos');
+
+  // Aba 5: Metadados
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+    ['versão','5'],
+    ['exportado em', new Date().toISOString()],
+  ]), 'Info');
+
+  XLSX.writeFile(wb, 'rotina-estudos.xlsx');
   showToast('exportado');
 }
 ['btnExport','btnExport2'].forEach(id => document.getElementById(id).onclick = doExport);
@@ -1648,19 +1812,61 @@ function doExport() {
 
 document.getElementById('importFile').addEventListener('change', e => {
   const f = e.target.files[0]; if (!f) return;
+  if (typeof XLSX === 'undefined') { showToast('biblioteca xlsx não carregada'); return; }
   const r = new FileReader();
   r.onload = ev => {
     try {
-      const d = JSON.parse(ev.target.result);
-      if (d.att || d.attendance) att = d.att || d.attendance;
-      if (d.ev) { customEvents = d.ev; customEvents.forEach(e => e.date = new Date(e.date)); }
-      if (d.tasks)  tasks  = d.tasks;
-      if (d.topics) topics = d.topics;
+      const wb = XLSX.read(ev.target.result, { type: 'array' });
+
+      // Presença
+      const attSheet = wb.Sheets['Presença'];
+      if (attSheet) {
+        const rows = XLSX.utils.sheet_to_json(attSheet, { header: 1 });
+        att = {};
+        for (let i = 1; i < rows.length; i++) {
+          const [id, v] = rows[i];
+          if (id) att[String(id)] = v === 'sim' || v === true || v === 1;
+        }
+      }
+
+      // Eventos
+      const evSheet = wb.Sheets['Eventos'];
+      if (evSheet) {
+        const rows = XLSX.utils.sheet_to_json(evSheet, { header: 1 });
+        customEvents = [];
+        for (let i = 1; i < rows.length; i++) {
+          const [id, nome, data, ini, fim, type, cor, note] = rows[i];
+          if (id) customEvents.push({ id: String(id), nome: String(nome||''), date: new Date(data), ini: String(ini||''), fim: String(fim||''), type: String(type||'lembrete'), cor: String(cor||'#6366f1'), note: String(note||'') });
+        }
+      }
+
+      // Tarefas
+      const taskSheet = wb.Sheets['Tarefas'];
+      if (taskSheet) {
+        const rows = XLSX.utils.sheet_to_json(taskSheet, { header: 1 });
+        tasks = [];
+        for (let i = 1; i < rows.length; i++) {
+          const [id, text, checked] = rows[i];
+          if (id) tasks.push({ id: String(id), text: String(text||''), checked: checked === 'sim' || checked === true });
+        }
+      }
+
+      // Tópicos
+      const topicSheet = wb.Sheets['Tópicos'];
+      if (topicSheet) {
+        const rows = XLSX.utils.sheet_to_json(topicSheet, { header: 1 });
+        topics = [];
+        for (let i = 1; i < rows.length; i++) {
+          const [id, text, checked] = rows[i];
+          if (id) topics.push({ id: String(id), text: String(text||''), checked: checked === 'sim' || checked === true });
+        }
+      }
+
       save(false); init();
       sbFullSync().then(() => showToast('importado e sincronizado')).catch(() => showToast('importado'));
-    } catch { alert('arquivo inválido'); }
+    } catch (err) { console.error('import error:', err); alert('arquivo inválido ou corrompido'); }
   };
-  r.readAsText(f); e.target.value = '';
+  r.readAsArrayBuffer(f); e.target.value = '';
 });
 
 // ═══════════════════════════════════════════════
