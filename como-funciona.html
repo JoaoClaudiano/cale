@@ -599,8 +599,15 @@ mark.search-hl { background: color-mix(in srgb, var(--accent) 22%, transparent);
 
   /* ── Scroll-to-top button ── */
   const scrollBtn = document.getElementById('scrollTop');
+  let scrollTicking = false;
   window.addEventListener('scroll', () => {
-    scrollBtn.classList.toggle('visible', window.scrollY > 300);
+    if (!scrollTicking) {
+      requestAnimationFrame(() => {
+        scrollBtn.classList.toggle('visible', window.scrollY > 300);
+        scrollTicking = false;
+      });
+      scrollTicking = true;
+    }
   }, { passive: true });
   scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
@@ -627,14 +634,14 @@ mark.search-hl { background: color-mix(in srgb, var(--accent) 22%, transparent);
   const searchClear = document.getElementById('searchClear');
   const noResults   = document.getElementById('searchNoResults');
   const termSpan    = document.getElementById('searchTerm');
+  const SKIP_TAGS   = new Set(['SCRIPT','STYLE','INPUT','BUTTON','MARK']);
+  const MAX_QUERY   = 200;
 
-  // Collect all searchable text nodes inside doc-content
   function highlight(query) {
     // Remove existing highlights
     document.querySelectorAll('mark.search-hl').forEach(m => {
       m.replaceWith(document.createTextNode(m.textContent));
     });
-    // Normalize adjacent text nodes
     document.querySelector('.doc-content').normalize();
 
     const items = document.querySelectorAll('.doc-section');
@@ -651,11 +658,11 @@ mark.search-hl { background: color-mix(in srgb, var(--accent) 22%, transparent);
     let anyVisible = false;
 
     items.forEach(section => {
-      const text = section.textContent;
-      if (re.test(text)) {
+      re.lastIndex = 0;
+      if (re.test(section.textContent)) {
         section.style.display = '';
         anyVisible = true;
-        // Highlight text nodes
+        re.lastIndex = 0;
         walkAndHighlight(section, re);
       } else {
         section.style.display = 'none';
@@ -668,6 +675,7 @@ mark.search-hl { background: color-mix(in srgb, var(--accent) 22%, transparent);
   function walkAndHighlight(node, re) {
     if (node.nodeType === Node.TEXT_NODE) {
       const val = node.nodeValue;
+      re.lastIndex = 0;
       if (!re.test(val)) return;
       re.lastIndex = 0;
       const frag = document.createDocumentFragment();
@@ -682,7 +690,7 @@ mark.search-hl { background: color-mix(in srgb, var(--accent) 22%, transparent);
       }
       if (last < val.length) frag.appendChild(document.createTextNode(val.slice(last)));
       node.parentNode.replaceChild(frag, node);
-    } else if (node.nodeType === Node.ELEMENT_NODE && !['SCRIPT','STYLE','INPUT','BUTTON'].includes(node.tagName)) {
+    } else if (node.nodeType === Node.ELEMENT_NODE && !SKIP_TAGS.has(node.tagName)) {
       Array.from(node.childNodes).forEach(c => walkAndHighlight(c, re));
     }
   }
@@ -690,7 +698,7 @@ mark.search-hl { background: color-mix(in srgb, var(--accent) 22%, transparent);
   let searchTimer;
   searchInput.addEventListener('input', () => {
     clearTimeout(searchTimer);
-    searchTimer = setTimeout(() => highlight(searchInput.value.trim()), 180);
+    searchTimer = setTimeout(() => highlight(searchInput.value.trim().slice(0, MAX_QUERY)), 150);
   });
   searchClear.addEventListener('click', () => {
     searchInput.value = '';
