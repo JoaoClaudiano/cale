@@ -437,7 +437,7 @@ footer { border-top: 1px solid var(--border); padding: .75rem 1.25rem; display: 
 .jellyfish-svg {
   width: 96px; height: auto; overflow: visible;
   filter: drop-shadow(0 8px 26px rgba(59,130,246,.30));
-  animation: jelly-float 3.6s ease-in-out infinite;
+  animation: jelly-float 4.8s ease-in-out infinite;
 }
 .jbell {
   fill: url(#jg-body);
@@ -468,46 +468,46 @@ footer { border-top: 1px solid var(--border); padding: .75rem 1.25rem; display: 
   stroke: rgba(186,230,253,.38); stroke-width: 0.75;
 }
 @keyframes jelly-float {
-  /* Navier-Stokes + elasticidade: resistência viscosa suaviza a propulsão;
-     subida propulsiva gradual, afundamento passivo lento. */
-  0%   { transform: rotate(-14deg)   translateY(0px);  }
-  10%  { transform: rotate(-13.5deg) translateY(-5px); }
-  22%  { transform: rotate(-12.5deg) translateY(-14px);}
-  36%  { transform: rotate(-13deg)   translateY(-8px); }
-  55%  { transform: rotate(-13.5deg) translateY(-3px); }
-  100% { transform: rotate(-14deg)   translateY(0px);  }
+  /* Deriva orgânica: correntes suaves + propulsão assimétrica por jato.
+     Inclinação para a direita (ângulos positivos). Movimentos irregulares
+     em X e Y imitam o comportamento real em fluido de baixo Reynolds. */
+  0%   { transform: rotate(10deg)  translateX(0px)   translateY(0px);  }
+  7%   { transform: rotate(11deg)  translateX(1.5px) translateY(-4px); }
+  16%  { transform: rotate(9deg)   translateX(3px)   translateY(-13px);}
+  27%  { transform: rotate(11.5deg)translateX(2px)   translateY(-7px); }
+  38%  { transform: rotate(10.5deg)translateX(-1px)  translateY(-2px); }
+  50%  { transform: rotate(9.5deg) translateX(0px)   translateY(-6px); }
+  63%  { transform: rotate(11deg)  translateX(2px)   translateY(-10px);}
+  76%  { transform: rotate(10deg)  translateX(1px)   translateY(-4px); }
+  88%  { transform: rotate(9deg)   translateX(-1px)  translateY(-1px); }
+  100% { transform: rotate(10deg)  translateX(0px)   translateY(0px);  }
 }
 @keyframes jelly-bell {
   /* Modelo Navier-Stokes + elasticidade: membrana elástica (mesogléia) em fluido viscoso.
      A drag viscoso suaviza o impulso muscular → contração quasi-sinusoidal amortecida.
-     O volume do sino decresce no pico (~0.859 no pico) — o fluido é expulso pelo orifício
-     oral, gerando propulsão por jato (mecanismo real da Aurelia aurita). */
-  0%   { transform: scaleY(1.000) scaleX(1.000); } /* repouso */
-  5%   { transform: scaleY(0.970) scaleX(1.018); } /* início suave da contração */
-  10%  { transform: scaleY(0.900) scaleX(1.060); } /* contração acelerando */
-  18%  { transform: scaleY(0.750) scaleX(1.145); } /* pico de contração */
-  26%  { transform: scaleY(0.870) scaleX(1.075); } /* recuo elástico */
-  36%  { transform: scaleY(0.980) scaleX(1.011); } /* retorno ao repouso */
-  44%  { transform: scaleY(1.020) scaleX(0.990); } /* leve overshoot elástico */
-  52%  { transform: scaleY(1.005) scaleX(0.997); } /* amortecendo */
-  60%  { transform: scaleY(1.000) scaleX(1.000); } /* repouso */
-  100% { transform: scaleY(1.000) scaleX(1.000); } /* deslize passivo */
-}
-/* ─ BORDER ORBIT ─ */
-@keyframes border-orbit {
-  to { transform: rotate(360deg); }
+     Micro-rotações assimétricas imitam irregularidades reais do músculo coronal. */
+  0%   { transform: scaleY(1.000) scaleX(1.000) rotate(0deg);   } /* repouso */
+  5%   { transform: scaleY(0.970) scaleX(1.018) rotate(0.4deg); } /* início suave da contração */
+  10%  { transform: scaleY(0.900) scaleX(1.060) rotate(0.8deg); } /* contração acelerando */
+  18%  { transform: scaleY(0.750) scaleX(1.145) rotate(0.5deg); } /* pico de contração */
+  26%  { transform: scaleY(0.870) scaleX(1.075) rotate(-0.3deg);} /* recuo elástico */
+  36%  { transform: scaleY(0.980) scaleX(1.011) rotate(0.2deg); } /* retorno ao repouso */
+  44%  { transform: scaleY(1.020) scaleX(0.990) rotate(-0.2deg);} /* leve overshoot elástico */
+  52%  { transform: scaleY(1.005) scaleX(0.997) rotate(0.1deg); } /* amortecendo */
+  60%  { transform: scaleY(1.000) scaleX(1.000) rotate(0deg);   } /* repouso */
+  100% { transform: scaleY(1.000) scaleX(1.000) rotate(0deg);   } /* deslize passivo */
 }
 .login-card {
   position: relative;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.28);
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.32);
   border-radius: 20px; padding: 2rem 2.25rem;
   width: 100%; max-width: 380px;
   backdrop-filter: blur(32px) saturate(180%) brightness(1.06);
   -webkit-backdrop-filter: blur(32px) saturate(180%) brightness(1.06);
   box-shadow:
-    0 8px 40px rgba(0,0,0,0.18),
-    inset 0 1.5px 0 rgba(255,255,255,0.50),
+    0 8px 40px rgba(0,0,0,0.28),
+    inset 0 1.5px 0 rgba(255,255,255,0.55),
     inset 0 -1px 0 rgba(0,0,0,0.08);
   display: flex; flex-direction: column; gap: .6rem;
   transition: box-shadow .35s, transform .35s;
@@ -525,54 +525,22 @@ footer { border-top: 1px solid var(--border); padding: .75rem 1.25rem; display: 
     transparent 65%);
   pointer-events: none; z-index: 0;
 }
-/* Animated border-orbit — light travelling slowly around the card edge */
-.login-card::after {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: 22px;
-  background: conic-gradient(
-    from 0deg at 50% 50%,
-    transparent 0deg,
-    rgba(255,255,255,0.65) 18deg,
-    transparent 36deg
-  );
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: destination-out;
-  mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  padding: 2px; /* defines the visible border-ring thickness */
-  animation: border-orbit 9s linear infinite;
-  pointer-events: none; z-index: 0;
-}
 /* Children must sit above pseudo-elements */
 .login-card > * { position: relative; z-index: 1; }
 /* Dark mode overrides */
 body.dark .login-card {
-  background: rgba(15,10,30,0.45);
-  border-color: rgba(167,139,250,0.22);
+  background: rgba(15,10,30,0.50);
+  border-color: rgba(167,139,250,0.28);
   box-shadow:
-    0 8px 48px rgba(0,0,0,0.60),
-    inset 0 1.5px 0 rgba(200,180,255,0.22),
+    0 8px 48px rgba(0,0,0,0.65),
+    inset 0 1.5px 0 rgba(200,180,255,0.28),
     inset 0 -1px 0 rgba(0,0,0,0.30);
 }
 body.dark .login-card::before {
   background: linear-gradient(135deg,
-    rgba(167,139,250,0.20) 0%,
+    rgba(167,139,250,0.22) 0%,
     rgba(139,92,246,0.06) 38%,
     transparent 65%);
-}
-body.dark .login-card::after {
-  background: conic-gradient(
-    from 0deg at 50% 50%,
-    transparent 0deg,
-    rgba(167,139,250,0.55) 18deg,
-    transparent 36deg
-  );
 }
 /* Adaptive Glass — high contrast mode: fall back to solid surface */
 @media (prefers-contrast: more) {
@@ -583,7 +551,7 @@ body.dark .login-card::after {
     border-color: var(--border2);
     box-shadow: 0 2px 8px rgba(0,0,0,0.10);
   }
-  .login-card::before, .login-card::after { display: none; }
+  .login-card::before { display: none; }
 }
 .login-logo {
   font-family: var(--mono); font-size: 18px;
@@ -594,11 +562,11 @@ body.dark .login-card::after {
   font-size: 12px; color: var(--text2); margin-bottom: .5rem;
 }
 .login-err {
-  font-size: 12px; color: var(--warn); min-height: 1.2em;
-  background: var(--warnb); border-radius: 6px; padding: 0;
-  transition: padding .15s;
+  font-size: 12px; color: var(--warn);
+  border-radius: 6px; padding: 0;
+  transition: padding .15s, background .15s;
 }
-.login-err:not(:empty) { padding: 6px 10px; }
+.login-err:not(:empty) { padding: 6px 10px; background: var(--warnb); }
 .login-submit {
   width: 100%; margin-top: .4rem; padding: 9px;
   font-size: 14px; border-radius: 8px; letter-spacing: .02em;
@@ -635,6 +603,11 @@ body.login-page {
   align-items: center; justify-content: center;
   padding: 2rem 1rem 7rem;
   position: relative;
+  /* deep purple-blue gradient — provides rich backdrop for glass card effect */
+  background: linear-gradient(135deg, #0d0921 0%, #1a1040 40%, #0a1628 70%, #0d0f1e 100%);
+}
+body.dark.login-page {
+  background: linear-gradient(135deg, #07040f 0%, #120a2a 40%, #060e1a 70%, #080a12 100%);
 }
 body.login-page #loginCanvas {
   position: fixed; inset: 0;
@@ -645,9 +618,14 @@ body.login-page .jellyfish-wrap,
 body.login-page .login-card { position: relative; z-index: 1; }
 body.login-page footer {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 2;
-  background: color-mix(in srgb, var(--bg) 80%, transparent);
+  /* login page always renders on a dark gradient — footer matches that dark context */
+  background: rgba(10, 7, 25, 0.82);
   backdrop-filter: blur(8px);
+  border-top-color: rgba(255,255,255,0.08);
 }
+body.login-page footer .finfo,
+body.login-page footer .fnav a { color: rgba(200,190,230,0.55); }
+body.login-page footer .fnav a:hover { color: rgba(200,190,230,0.90); }
 
 /* ─ LOADING OVERLAY ─ */
 .load-overlay {
@@ -857,7 +835,7 @@ body.dark .clock { color: var(--text2); border-color: var(--border2); background
 .load-jelly { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
 .load-jelly-svg { filter: drop-shadow(0 0 16px #8b5cf680); }
 .load-label { font-family: var(--mono); font-size: 11px; color: var(--text3); letter-spacing: .08em; }
-@keyframes jelly-float {
+@keyframes jelly-load-float {
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(-8px); }
 }
@@ -865,7 +843,7 @@ body.dark .clock { color: var(--text2); border-color: var(--border2); background
   0%, 100% { transform: scaleX(1); }
   50%       { transform: scaleX(1.05); }
 }
-.load-overlay.show .jelly-float { animation: jelly-float 1.6s ease-in-out infinite; }
+.load-overlay.show .jelly-float { animation: jelly-load-float 1.6s ease-in-out infinite; }
 
 /* ─ PAGE FADE-IN ─ */
 @keyframes pageFadeIn {
