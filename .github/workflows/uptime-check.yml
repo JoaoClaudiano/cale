@@ -2,7 +2,7 @@ name: Uptime Check
 
 on:
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: '0 */6 * * *'
   workflow_dispatch:
 
 permissions:
@@ -84,7 +84,7 @@ jobs:
 
           history = data.get("history", [])
           history.append({"ts": timestamp, "web": web, "supabase": supabase, "pwa": "up", "overall": overall})
-          history = history[-90:]  # keep last 90 checks (22.5 hours at 15-min intervals)
+          history = history[-90:]  # keep last 90 checks (~22.5 days at 6-hour intervals)
 
           data = {
               "last_check": timestamp,
@@ -135,14 +135,14 @@ jobs:
           | Sincronização (Supabase) | ${{ steps.checks.outputs.supabase }} |
 
           ### Causa provável
-          O projeto Supabase no plano gratuito é pausado automaticamente após **7 dias sem atividade no banco de dados**. O monitoramento de uptime agora faz uma consulta real ao banco a cada 15 minutos para manter o projeto ativo, mas se a queda já ocorreu será necessária uma ação manual.
+          O projeto Supabase no plano gratuito é pausado automaticamente após **7 dias sem atividade no banco de dados**. O monitoramento de uptime agora faz uma consulta real ao banco a cada 6 horas para manter o projeto ativo, mas se a queda já ocorreu será necessária uma ação manual.
 
           ### Como restaurar
           1. Acesse [app.supabase.com](https://app.supabase.com) e faça login.
           2. Abra o projeto **wpxfhdlrygvucbmyfqaa**.
           3. Clique em **Restore project** (botão exibido quando o projeto está pausado).
           4. Aguarde ~2 minutos para o banco inicializar.
-          5. Este issue será fechado automaticamente na próxima verificação (a cada 15 min).
+          5. Este issue será fechado automaticamente na próxima verificação (a cada 6 horas).
 
           ---
           *Issue aberto automaticamente pelo monitoramento de uptime.*
