@@ -129,8 +129,10 @@ export function load() {
   const isDark = sd !== null ? sd === 'true' : true;
   if (isDark) {
     document.body.classList.add('dark');
-    const btn = document.getElementById('btnDark');
-    if (btn) btn.textContent = '☀ claro';
+    const iconEl  = document.querySelector('#btnDark .hbtn-icon');
+    const labelEl = document.querySelector('#btnDark .hbtn-label');
+    if (iconEl)  iconEl.textContent  = '☀';
+    if (labelEl) labelEl.textContent = ' claro';
   }
 
   loadSemConfig();

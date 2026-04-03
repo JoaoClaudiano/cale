@@ -140,7 +140,8 @@ export function updateFooter() {
 // ─────────────────────────────────────────────────────
 document.getElementById('btnDark').addEventListener('click', () => {
   const dark = document.body.classList.toggle('dark');
-  document.getElementById('btnDark').textContent = dark ? '☀ claro' : '🌙 escuro';
+  document.querySelector('#btnDark .hbtn-icon').textContent = dark ? '☀' : '🌙';
+  document.querySelector('#btnDark .hbtn-label').textContent = dark ? ' claro' : ' escuro';
   localStorage.setItem(LS.dark, dark);
 });
 
