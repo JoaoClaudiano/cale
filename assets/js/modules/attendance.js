@@ -25,7 +25,7 @@ export function renderAttendance() {
   const openSet = new Set([...container.querySelectorAll('.att-card.open')].map(e => e.dataset.c));
   container.innerHTML = '';
 
-  COURSES.forEach(c => {
+  COURSES.forEach((c, cardIdx) => {
     const s     = calcStats(c);
     const hoje  = new Date(); hoje.setHours(0,0,0,0);
     const isUserCourse = userCourses.some(uc => uc.id === c.id);
@@ -42,6 +42,19 @@ export function renderAttendance() {
     const trendBadge = trend==='up'  ?'<span class="trend-up"   title="Frequência melhorando ↑">↑</span>':
                        trend==='down'?'<span class="trend-down" title="Faltou na última aula ↓">↓</span>':
                        trend==='bad' ?'<span class="trend-bad"  title="Múltiplas faltas seguidas ↓↓">↓↓</span>':'';
+
+    // ── Swipe wrapper ──
+    const wrap = document.createElement('div');
+    wrap.className = 'att-swipe-wrap stagger-item';
+    wrap.style.setProperty('--si-delay', `${cardIdx * 60}ms`);
+
+    const delAction  = document.createElement('div');
+    delAction.className = 'att-swipe-action att-swipe-del';
+    delAction.innerHTML = '<span>✕</span>excluir';
+
+    const archAction = document.createElement('div');
+    archAction.className = 'att-swipe-action att-swipe-arch';
+    archAction.innerHTML = '<span>📦</span>arquivar';
 
     const card = document.createElement('div');
     card.className = 'att-card'+(openSet.has(c.id)?' open':'');
@@ -80,7 +93,11 @@ export function renderAttendance() {
           <button class="att-mark-btn" data-c="${esc(c.id)}">✓ marcar todas passadas</button>
         </div>
       </div>`;
-    container.appendChild(card);
+
+    wrap.appendChild(delAction);
+    wrap.appendChild(archAction);
+    wrap.appendChild(card);
+    container.appendChild(wrap);
 
     const listEl = card.querySelector('.att-list');
     c._aulas.forEach(aula => {
@@ -132,6 +149,58 @@ export function renderAttendance() {
       c._aulas.filter(a=>a.date<=hoje2&&!cancelled.has(a.id)).forEach(a=>{att[a.id]=true;sbSaveAtt(a.id,true);});
       save(); renderAttendance(); renderCalendar();
     });
+
+    // ── Swipe to reveal actions ──
+    initSwipe(wrap, card, c, isUserCourse);
+  });
+}
+
+const SWIPE_THRESHOLD = 72;
+
+function initSwipe(wrap, card, c, isUserCourse) {
+  let startX = 0, startY = 0, curX = 0, dragging = false, locked = false;
+
+  card.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) return;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    curX = 0; dragging = false; locked = false;
+  }, { passive: false });
+
+  card.addEventListener('touchmove', e => {
+    if (locked) return;
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+    if (!dragging) {
+      if (Math.abs(dy) > Math.abs(dx)) { locked = true; return; }
+      if (Math.abs(dx) > 4) dragging = true;
+    }
+    if (!dragging) return;
+    e.preventDefault();
+    curX = dx;
+    card.classList.add('is-swiping');
+    const clamped = Math.max(-SWIPE_THRESHOLD, Math.min(SWIPE_THRESHOLD, curX));
+    card.style.transform = `translateX(${clamped}px)`;
+  }, { passive: false });
+
+  card.addEventListener('touchend', () => {
+    if (!dragging) { card.classList.remove('is-swiping'); return; }
+    card.classList.remove('is-swiping');
+    if (curX > SWIPE_THRESHOLD * 0.8 && isUserCourse) {
+      // Swipe right → confirm delete
+      card.style.transform = '';
+      if (confirm(`Remover disciplina "${c.nome}"?\nEsta ação não pode ser desfeita.`)) {
+        deleteCourse(c.id);
+      }
+    } else if (curX < -SWIPE_THRESHOLD * 0.8) {
+      // Swipe left → confirm archive
+      card.style.transform = '';
+      if (confirm(`Arquivar "${c.nome}"?\nOs dados de frequência serão preservados.`)) {
+        archiveCourse(c);
+      }
+    } else {
+      card.style.transform = '';
+    }
   });
 }
 
@@ -418,8 +487,8 @@ function _doExportWithState() {
   });
 }
 
-['btnExport','btnExport2'].forEach(id=>document.getElementById(id).onclick=_doExportWithState);
-['btnImport','btnImport2'].forEach(id=>document.getElementById(id).onclick=()=>document.getElementById('importFile').click());
+document.getElementById('btnExport2').onclick=_doExportWithState;
+document.getElementById('btnImport2').onclick=()=>document.getElementById('importFile').click();
 
 document.getElementById('importFile').addEventListener('change',e=>{
   const f=e.target.files[0]; if(!f) return;

@@ -17,6 +17,7 @@ import {
 
 // ── Estado local ──
 let wkOff       = 0;   // offset de semanas (0 = atual)
+let _prevWkOff  = null; // rastreia mudança de semana para animação
 let editingEvId = null; // null = novo, string = editar
 
 // ─────────────────────────────────────────────────────
@@ -380,6 +381,28 @@ export function renderCalendar() {
 
   document.getElementById('calInner').innerHTML = h;
   document.getElementById('wkLabel').textContent = `${fmt(days[0])} – ${fmt(days[6])}`;
+
+  // ── Animação de entrada ao mudar de semana ──
+  const weekChanged = _prevWkOff !== null && _prevWkOff !== wkOff;
+  _prevWkOff = wkOff;
+  if (weekChanged) {
+    document.querySelectorAll('.cal-ev').forEach((el, i) => {
+      el.style.animation = 'none';
+      el.style.opacity   = '0';
+      el.style.transform = 'translateY(10px)';
+      const col  = el.closest('.cal-dcol');
+      const colI = col ? parseInt(col.dataset.col || 0) : 0;
+      const delay = colI * 40 + (i % 4) * 18;
+      requestAnimationFrame(() => {
+        el.style.transition = `opacity .28s ease ${delay}ms, transform .28s ease ${delay}ms`;
+        el.style.opacity   = '';
+        el.style.transform = '';
+        el.addEventListener('transitionend', () => {
+          el.style.transition = '';
+        }, { once: true });
+      });
+    });
+  }
 
   document.querySelectorAll('.cal-ev[data-aula]').forEach(el => {
     el.addEventListener('click', e => { e.stopPropagation(); openAulaPopup(el.dataset.aula, el.getBoundingClientRect()); });

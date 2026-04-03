@@ -29,6 +29,24 @@ setInitCallback(init);
 const GUEST_UPGRADE_BANNER_DELAY_MS = 8000;
 
 // ─────────────────────────────────────────────────────
+// SAUDAÇÃO DINÂMICA
+// ─────────────────────────────────────────────────────
+function updateGreeting() {
+  const el = document.getElementById('greeting');
+  if (!el) return;
+  const h = new Date().getHours();
+  const period = h >= 5 && h < 12 ? 'Bom dia' : h >= 12 && h < 18 ? 'Boa tarde' : 'Boa noite';
+  const icon   = h >= 5 && h < 12 ? '☀️' : h >= 12 && h < 18 ? '🌤️' : '🌙';
+  let name = '';
+  if (supaUser) {
+    const meta = supaUser.user_metadata;
+    const full  = (meta && (meta.full_name || meta.name)) || '';
+    name = full ? full.split(' ')[0] : supaUser.email.split('@')[0];
+  }
+  el.textContent = name ? `${icon} ${period}, ${name}!` : `${icon} ${period}!`;
+}
+
+// ─────────────────────────────────────────────────────
 // INIT — renderiza toda a UI
 // ─────────────────────────────────────────────────────
 export function init() {
@@ -40,6 +58,7 @@ export function init() {
   renderArchivedSection();
   updateFooter();
   initColorRow();
+  updateGreeting();
   setTimeout(scrollToNow, 100);
 }
 

@@ -15,6 +15,11 @@ const SLIDES = [
     text:  'Todas as suas aulas organizadas por semana. Clique em uma aula para marcar presença, ou em um horário vazio para criar lembretes, provas e entregas.',
   },
   {
+    icon:  '🎓',
+    title: 'Adicionar Disciplinas',
+    text:  'Na seção "frequência por disciplina", clique em "+ disciplina". Preencha nome, código e clique em "+ horário" para definir os dias e horários de cada aula. O app criará automaticamente todas as aulas do semestre!',
+  },
+  {
     icon:  '📊',
     title: 'Controle de Frequência',
     text:  'Acompanhe a frequência de cada disciplina em tempo real. O app calcula quantas horas você ainda pode faltar e avisa quando estiver em risco de reprovação.',
@@ -22,7 +27,7 @@ const SLIDES = [
   {
     icon:  '📍',
     title: 'Presença Automática',
-    text:  'Configure a localização da sua escola e o app detecta quando você está lá durante uma aula — marcando presença automaticamente, sem você precisar fazer nada!',
+    text:  'Configure onde fica sua escola e o app detecta quando você está lá durante uma aula — marcando presença automaticamente! Ao fechar este tour, um banner aparecerá para você configurar a localização.',
   },
   {
     icon:  '📝',
@@ -32,6 +37,11 @@ const SLIDES = [
 ];
 
 export function initTour() {
+  // Se é um novo cadastro, força exibição do tour
+  if (localStorage.getItem('fs-new-user')) {
+    localStorage.removeItem(LS.tourDone);
+    localStorage.removeItem('fs-new-user');
+  }
   if (localStorage.getItem(LS.tourDone)) return;
 
   const overlay  = document.getElementById('tourOverlay');
