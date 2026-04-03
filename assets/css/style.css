@@ -1311,8 +1311,6 @@ body.dark .acc-action-btn:hover { background: var(--surface3); }
 
 .sp-screen.sp-idle .sp-nebula  { opacity: 0; animation: none; }
 
-.sp-screen.sp-idle .sp-particle { animation: none; opacity: 0; }
-
 .sp-screen.sp-idle .sp-avatar {
   opacity: 1;
   cursor: pointer;
@@ -1363,15 +1361,14 @@ body.dark .acc-action-btn:hover { background: var(--surface3); }
     sp-breathe     3s  .25s ease-in-out infinite;
 }
 
-/* Floating particles */
+/* Floating particles — position & opacity driven by JS Brownian loop */
 .sp-particle {
   position: absolute;
+  left: 0; top: 0;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(200,220,255,.9) 0%, rgba(160,190,255,.3) 100%);
-  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(210,230,255,.95) 0%, rgba(160,190,255,.25) 100%);
   opacity: 0;
   pointer-events: none;
-  animation: sp-particle 4s ease-in-out infinite;
 }
 
 /* ── Keyframes ── */
@@ -1423,9 +1420,3 @@ body.dark .acc-action-btn:hover { background: var(--surface3); }
   }
 }
 
-@keyframes sp-particle {
-  0%   { opacity: 0;            transform: translate(-50%, -50%) translateY(0)     scale(1);   }
-  12%  { opacity: var(--sp-op, .3); }
-  80%  { opacity: calc(var(--sp-op, .3) * .25); }
-  100% { opacity: 0;            transform: translate(-50%, -50%) translateY(-90px) scale(.4);  }
-}
