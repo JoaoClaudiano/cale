@@ -418,7 +418,7 @@ footer { border-top: 1px solid var(--border); padding: .75rem 1.25rem; display: 
 .btt.show { opacity: 1; pointer-events: auto; }
 .btt:hover { transform: translateY(-2px); }
 
-@media (max-width: 640px) { .semprog { display: none; } .clock { display: none; } main { padding: 1rem 1rem 2.5rem; } }
+@media (max-width: 640px) { .semprog { display: none; } .clock { display: none; } main { padding: 1rem 1rem 2.5rem; } #btnDark .hbtn-label { display: none; } }
 @media (max-width: 420px) {
   .login-card { padding: 1.25rem 1.1rem; }
   body.login-page { padding: 1rem .75rem 6rem; }
@@ -674,7 +674,7 @@ body.login-page:not(.dark) .login-card .form-input::placeholder { color: #9a9690
 
 /* ─ LOGIN PAGE (login.html) ─ */
 body.login-page {
-  min-height: 100vh; overflow-x: hidden; overflow-y: auto;
+  min-height: 100vh; min-height: 100dvh; overflow-x: hidden; overflow-y: auto;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   padding: 2rem 1rem 7rem;

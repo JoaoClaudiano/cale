@@ -222,6 +222,10 @@ export function showSplash() {
   _mouseX     = 0;
   _mouseY     = 0;
 
+  // Lock scroll on the underlying page so it cannot bleed through the fixed overlay
+  document.documentElement.style.overflow = 'hidden';
+  document.body.style.overflow            = 'hidden';
+
   // Gate that resolves only after the user clicks the avatar
   _clickPromise = new Promise(res => { _clickResolve = res; });
 
@@ -289,12 +293,24 @@ export function hideSplash() {
 
       setTimeout(() => {
         const splash = document.getElementById('splashScreen');
-        if (!splash) { _stopParticles(); resolve(); return; }
+        if (!splash) {
+          _stopParticles();
+          document.documentElement.style.overflow = '';
+          document.body.style.overflow            = '';
+          resolve();
+          return;
+        }
 
         splash.classList.add('sp-out');
         _stopParticles();
 
-        const done = () => { splash.remove(); resolve(); };
+        const done = () => {
+          splash.remove();
+          // Restore scroll now that the overlay is gone
+          document.documentElement.style.overflow = '';
+          document.body.style.overflow            = '';
+          resolve();
+        };
         splash.addEventListener('animationend', done, { once: true });
         // Safety fallback if animationend doesn't fire
         setTimeout(done, EXIT_ANIMATION_MS);
