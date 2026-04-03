@@ -1082,6 +1082,24 @@ body.dark .btn-glass-google {
   border-color: rgba(255,255,255,0.14);
 }
 
+.btn-glass-anon {
+  background: rgba(100,100,130,0.12);
+  color: rgba(200,190,240,0.65);
+  font-size: 13px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,.07);
+  border-color: rgba(200,190,240,0.12);
+}
+.btn-glass-anon:hover {
+  background: rgba(120,120,160,0.20);
+  border-color: rgba(200,190,240,0.22);
+  box-shadow: 0 5px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,.10);
+  transform: translateY(-1px);
+}
+body.dark .btn-glass-anon {
+  background: rgba(80,80,110,0.18);
+  border-color: rgba(160,150,200,0.15);
+}
+
 /* ─ GLASS DIVIDER ─ */
 .glass-divider {
   display: flex; align-items: center; text-align: center;

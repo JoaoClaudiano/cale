@@ -125,29 +125,46 @@ export async function sbLoad() {
       sb.from('tarefas').select('*').eq('user_id', uid).order('sort_order'),
       sb.from('topicos').select('*').eq('user_id', uid).order('sort_order'),
     ]);
-    if (pRes.error)  { console.error('presencas:',  pRes.error);  return false; }
-    if (eRes.error)  { console.error('eventos:',    eRes.error);  return false; }
-    if (tRes.error)  { console.error('tarefas:',    tRes.error);  return false; }
-    if (toRes.error) { console.error('topicos:',    toRes.error); return false; }
 
-    if (pRes.data) {
+    let loaded = false;
+
+    if (pRes.error) {
+      console.error('presencas:', pRes.error);
+    } else if (pRes.data) {
       const newAtt = {};
       pRes.data.forEach(p => { newAtt[p.aula_id] = p.presente; });
       setAtt(newAtt);
+      loaded = true;
     }
-    if (eRes.data) {
+
+    if (eRes.error) {
+      console.error('eventos:', eRes.error);
+    } else if (eRes.data) {
       setCustomEvents(eRes.data.map(e => ({
         id: e.id, nome: e.nome,
         date: parseDateLocal(e.date),
         ini: e.ini, fim: e.fim,
         type: e.type, cor: e.cor, note: e.note || '',
       })));
+      loaded = true;
     }
-    if (tRes.data  && tRes.data.length  > 0) setTasks(tRes.data.map(t => ({ id: t.id, text: t.text, checked: t.checked })));
-    if (toRes.data && toRes.data.length > 0) setTopics(toRes.data.map(t => ({ id: t.id, text: t.text, checked: t.checked })));
 
-    save(true);
-    return true;
+    if (tRes.error) {
+      console.error('tarefas:', tRes.error);
+    } else if (tRes.data) {
+      if (tRes.data.length > 0) setTasks(tRes.data.map(t => ({ id: t.id, text: t.text, checked: t.checked })));
+      loaded = true;
+    }
+
+    if (toRes.error) {
+      console.error('topicos:', toRes.error);
+    } else if (toRes.data) {
+      if (toRes.data.length > 0) setTopics(toRes.data.map(t => ({ id: t.id, text: t.text, checked: t.checked })));
+      loaded = true;
+    }
+
+    if (loaded) save(true);
+    return loaded;
   } catch (err) {
     console.error('sbLoad:', err);
     return false;
@@ -170,6 +187,12 @@ export function sbSaveAtt(aulaId, presente) {
 
 export function sbSaveEvent(ev) {
   if (!sb || !supaUser) return;
+  if (!navigator.onLine) {
+    offlineUpsertOp({ type: 'sbSaveEvent', entityId: ev.id, ev })
+      .then(() => updateOfflineBadge())
+      .catch(e => console.error('Erro ao enfileirar sbSaveEvent:', e));
+    return;
+  }
   _sbExec('sbSaveEvent', sb.from('eventos')
     .upsert({ id: ev.id, user_id: supaUser.id, nome: ev.nome,
               date: fmtDateLocal(ev.date), ini: ev.ini, fim: ev.fim,
@@ -178,12 +201,24 @@ export function sbSaveEvent(ev) {
 
 export function sbDeleteEvent(id) {
   if (!sb || !supaUser) return;
+  if (!navigator.onLine) {
+    offlineUpsertOp({ type: 'sbDeleteEvent', entityId: id, eventId: id })
+      .then(() => updateOfflineBadge())
+      .catch(e => console.error('Erro ao enfileirar sbDeleteEvent:', e));
+    return;
+  }
   _sbExec('sbDeleteEvent', sb.from('eventos').delete()
     .eq('id', id).eq('user_id', supaUser.id));
 }
 
 export function sbSaveItem(type, item, order) {
   if (!sb || !supaUser) return;
+  if (!navigator.onLine) {
+    offlineUpsertOp({ type: 'sbSaveItem', entityId: item.id, itemType: type, item, order: order || 0 })
+      .then(() => updateOfflineBadge())
+      .catch(e => console.error('Erro ao enfileirar sbSaveItem:', e));
+    return;
+  }
   const table = type === 'task' ? 'tarefas' : 'topicos';
   _sbExec('sbSaveItem', sb.from(table)
     .upsert({ id: item.id, user_id: supaUser.id,
@@ -193,6 +228,12 @@ export function sbSaveItem(type, item, order) {
 
 export function sbDeleteItem(type, id) {
   if (!sb || !supaUser) return;
+  if (!navigator.onLine) {
+    offlineUpsertOp({ type: 'sbDeleteItem', entityId: id, itemType: type, itemId: id })
+      .then(() => updateOfflineBadge())
+      .catch(e => console.error('Erro ao enfileirar sbDeleteItem:', e));
+    return;
+  }
   const table = type === 'task' ? 'tarefas' : 'topicos';
   _sbExec('sbDeleteItem', sb.from(table).delete()
     .eq('id', id).eq('user_id', supaUser.id));
@@ -275,21 +316,41 @@ export async function processOfflineQueue() {
 
   for (const op of ready) {
     try {
+      let error = null;
       if (op.type === 'sbSaveAtt') {
-        const { error } = await sb.from('presencas')
+        ({ error } = await sb.from('presencas')
           .upsert({ user_id: supaUser.id, aula_id: op.aulaId, presente: op.presente },
-                  { onConflict: 'user_id,aula_id' });
-        if (!error) {
-          await offlineDeleteOp(op.id);
-        } else {
-          const newCount = (op.retryCount || 0) + 1;
-          await offlineUpdateOp(op.id, {
-            retryCount:  newCount,
-            status:      newCount >= OFFLINE_MAX_RETRIES ? 'failed' : 'pending',
-            lastAttempt: Date.now(),
-          });
-          console.error('processOfflineQueue sbSaveAtt:', error);
-        }
+                  { onConflict: 'user_id,aula_id' }));
+      } else if (op.type === 'sbSaveItem') {
+        const table = op.itemType === 'task' ? 'tarefas' : 'topicos';
+        ({ error } = await sb.from(table)
+          .upsert({ id: op.item.id, user_id: supaUser.id,
+                    text: op.item.text, checked: op.item.checked,
+                    sort_order: op.order || 0 }));
+      } else if (op.type === 'sbDeleteItem') {
+        const table = op.itemType === 'task' ? 'tarefas' : 'topicos';
+        ({ error } = await sb.from(table).delete()
+          .eq('id', op.itemId).eq('user_id', supaUser.id));
+      } else if (op.type === 'sbSaveEvent') {
+        const ev = op.ev;
+        ({ error } = await sb.from('eventos')
+          .upsert({ id: ev.id, user_id: supaUser.id, nome: ev.nome,
+                    date: fmtDateLocal(ev.date), ini: ev.ini, fim: ev.fim,
+                    type: ev.type, cor: ev.cor, note: ev.note || '' }));
+      } else if (op.type === 'sbDeleteEvent') {
+        ({ error } = await sb.from('eventos').delete()
+          .eq('id', op.eventId).eq('user_id', supaUser.id));
+      }
+      if (!error) {
+        await offlineDeleteOp(op.id);
+      } else {
+        const newCount = (op.retryCount || 0) + 1;
+        await offlineUpdateOp(op.id, {
+          retryCount:  newCount,
+          status:      newCount >= OFFLINE_MAX_RETRIES ? 'failed' : 'pending',
+          lastAttempt: Date.now(),
+        });
+        console.error('processOfflineQueue ' + op.type + ':', error);
       }
     } catch (e) {
       const newCount = (op.retryCount || 0) + 1;
@@ -304,12 +365,15 @@ export async function processOfflineQueue() {
 
   await updateOfflineBadge();
   // Usa importação dinâmica para evitar circular (calendar/attendance importam supabase)
-  const [calMod, attMod] = await Promise.all([
+  const [calMod, attMod, uiMod] = await Promise.all([
     import('./calendar.js'),
     import('./attendance.js'),
+    import('./ui.js'),
   ]);
   calMod.renderCalendar();
   attMod.renderAttendance();
+  uiMod.renderList('task');
+  uiMod.renderList('topic');
 }
 
 window.addEventListener('online',  updateOnlineStatus);
