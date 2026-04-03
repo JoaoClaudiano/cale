@@ -55,7 +55,8 @@ export function initLocationModal() {
       navigator.geolocation.getCurrentPosition(
         pos => {
           const { latitude: lat, longitude: lng } = pos.coords;
-          saveCampusCoords(lat, lng, 'Minha Escola');
+          const nameV = document.getElementById('locGpsName')?.value.trim();
+          saveCampusCoords(lat, lng, nameV || 'Minha Escola');
           if (gpsStatus) {
             gpsStatus.textContent = `✓ Localização salva: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
             gpsStatus.style.color = 'var(--ok)';
@@ -79,49 +80,103 @@ export function initLocationModal() {
     });
   }
 
-  // ── Search tab (Nominatim / OpenStreetMap) ────────────────
+  // ── Search tab (Nominatim + Photon / OpenStreetMap) ──────────
   const searchInp     = document.getElementById('locSearchInp');
   const searchBtn     = document.getElementById('locSearchBtn');
   const searchResults = document.getElementById('locSearchResults');
-  if (searchBtn && searchInp) {
-    searchBtn.addEventListener('click', () => doSearch(searchInp.value.trim()));
+
+  // Brazil bounding box: lon_min, lat_min, lon_max, lat_max
+  const BRAZIL_BBOX = '-73.98,-33.75,-34.79,5.27';
+
+  let _typeaheadTimer;
+  if (searchInp) {
+    // Typeahead: Photon autocomplete while typing
+    searchInp.addEventListener('input', () => {
+      clearTimeout(_typeaheadTimer);
+      const q = searchInp.value.trim();
+      if (q.length < 3) { if (searchResults) searchResults.innerHTML = ''; return; }
+      _typeaheadTimer = setTimeout(() => doPhotonSearch(q), 350);
+    });
     searchInp.addEventListener('keydown', e => {
-      if (e.key === 'Enter') doSearch(searchInp.value.trim());
+      if (e.key === 'Enter') { clearTimeout(_typeaheadTimer); doFullSearch(searchInp.value.trim()); }
     });
   }
+  if (searchBtn) {
+    searchBtn.addEventListener('click', () => { clearTimeout(_typeaheadTimer); doFullSearch(searchInp.value.trim()); });
+  }
 
-  async function doSearch(q) {
+  // Quick Photon-only search (used for typeahead)
+  async function doPhotonSearch(q) {
     if (!q || !searchResults) return;
-    searchBtn.disabled = true;
+    searchResults.innerHTML = '<p class="loc-search-hint">Buscando…</p>';
+    renderResults(await searchPhoton(q).catch(() => []));
+  }
+
+  // Full search: Nominatim (BR) first, Photon (BR) as fallback
+  async function doFullSearch(q) {
+    if (!q || !searchResults) return;
+    if (searchBtn) searchBtn.disabled = true;
     searchResults.innerHTML = '<p class="loc-search-hint">Buscando…</p>';
     try {
-      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5`;
-      const res  = await fetch(url, { headers: { 'Accept-Language': 'pt-BR,pt;q=0.9' } });
-      const data = await res.json();
-      searchResults.innerHTML = '';
-      if (!data.length) {
-        searchResults.innerHTML = '<p class="loc-search-hint">Nenhum resultado encontrado.</p>';
-      } else {
-        data.forEach(item => {
-          const btn = document.createElement('button');
-          btn.className = 'loc-result-btn';
-          const shortName = item.display_name.split(',').slice(0, MAX_DISPLAY_NAME_PARTS).join(', ');
-          btn.textContent = shortName;
-          btn.title = item.display_name;
-          btn.addEventListener('click', () => {
-            const name = item.display_name.split(',')[0].trim();
-            saveCampusCoords(parseFloat(item.lat), parseFloat(item.lon), name);
-            updateGeoBanner();
-            showToast(`📍 "${name}" salvo como escola!`);
-            setTimeout(closeModal, 800);
-          });
-          searchResults.appendChild(btn);
-        });
-      }
+      let items = await searchNominatim(q);
+      if (!items.length) items = await searchPhoton(q).catch(() => []);
+      renderResults(items);
     } catch {
       searchResults.innerHTML = '<p class="loc-search-hint" style="color:var(--warn)">Erro ao buscar. Verifique sua conexão.</p>';
     }
-    searchBtn.disabled = false;
+    if (searchBtn) searchBtn.disabled = false;
+  }
+
+  function renderResults(items) {
+    if (!searchResults) return;
+    searchResults.innerHTML = '';
+    if (!items.length) {
+      searchResults.innerHTML = '<p class="loc-search-hint">Nenhum resultado encontrado. Tente o nome completo, endereço ou use a aba Manual.</p>';
+      return;
+    }
+    items.forEach(({ lat, lon, displayName, shortName }) => {
+      const btn = document.createElement('button');
+      btn.className = 'loc-result-btn';
+      btn.textContent = shortName;
+      btn.title = displayName;
+      btn.addEventListener('click', () => {
+        const name = displayName.split(',')[0].trim();
+        saveCampusCoords(lat, lon, name);
+        updateGeoBanner();
+        showToast(`📍 "${name}" salvo como escola!`);
+        setTimeout(closeModal, 800);
+      });
+      searchResults.appendChild(btn);
+    });
+  }
+
+  async function searchNominatim(q) {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=10&addressdetails=1&countrycodes=br`;
+    const res  = await fetch(url, { headers: { 'Accept-Language': 'pt-BR,pt;q=0.9', 'User-Agent': 'flow.planner/1.0' } });
+    const data = await res.json();
+    return data.map(item => ({
+      lat:         parseFloat(item.lat),
+      lon:         parseFloat(item.lon),
+      displayName: item.display_name,
+      shortName:   item.display_name.split(',').slice(0, MAX_DISPLAY_NAME_PARTS).join(', '),
+    }));
+  }
+
+  async function searchPhoton(q) {
+    const url  = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=10&lang=pt&bbox=${BRAZIL_BBOX}`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    return (data.features || []).map(f => {
+      const p    = f.properties;
+      const name = p.name || p.street || q;
+      const parts = [name, p.city, p.state, p.country].filter(Boolean);
+      return {
+        lat:         f.geometry.coordinates[1],
+        lon:         f.geometry.coordinates[0],
+        displayName: parts.join(', '),
+        shortName:   parts.slice(0, MAX_DISPLAY_NAME_PARTS).join(', '),
+      };
+    });
   }
 
   // ── Manual tab ───────────────────────────────────────────
@@ -144,15 +199,17 @@ export function initLocationModal() {
 
   function openModal() {
     modal.classList.add('open');
-    // Pre-fill manual fields with current values if configured
+    // Pre-fill fields with current values if configured
     const cfg = getCampusCoords();
     if (cfg.custom) {
-      const latEl  = document.getElementById('locManualLat');
-      const lngEl  = document.getElementById('locManualLng');
-      const nameEl = document.getElementById('locManualName');
-      if (latEl)  latEl.value  = cfg.lat;
-      if (lngEl)  lngEl.value  = cfg.lng;
-      if (nameEl) nameEl.value = cfg.name || '';
+      const latEl   = document.getElementById('locManualLat');
+      const lngEl   = document.getElementById('locManualLng');
+      const nameEl  = document.getElementById('locManualName');
+      const gpsName = document.getElementById('locGpsName');
+      if (latEl)   latEl.value   = cfg.lat;
+      if (lngEl)   lngEl.value   = cfg.lng;
+      if (nameEl)  nameEl.value  = cfg.name || '';
+      if (gpsName) gpsName.value = cfg.name || '';
     }
   }
 
