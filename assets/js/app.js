@@ -47,6 +47,7 @@ function updateGreeting() {
   const text = getDynamicGreeting(name || undefined);
   typewriterGreeting(el, text);
   el.onclick = () => openDaySummaryModal();
+  el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDaySummaryModal(); } };
 }
 
 // ─────────────────────────────────────────────────────
