@@ -281,7 +281,7 @@
   // Submit on Enter key inside password fields
   ['authEmail','authPass','authPassConfirm'].forEach(id => {
     document.getElementById(id).addEventListener('keydown', e => {
-      if (e.key === 'Enter') authSubmitBtn.click();
+      if (e.key === 'Enter') { e.preventDefault(); authSubmitBtn.click(); }
     });
   });
 
