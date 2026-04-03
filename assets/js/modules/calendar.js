@@ -188,7 +188,7 @@ function openCustomPopup(evId, rect) {
   document.getElementById('evPopupMeta').innerHTML = `
     <span>${typeLabel}</span>
     <span>📅 ${ev.date.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'})}</span>
-    <span>🕐 ${ev.ini} – ${ev.fim}</span>
+    <span>🕐 ${esc(ev.ini)} – ${esc(ev.fim)}</span>
     ${ev.note ? `<span>📝 ${esc(ev.note)}</span>` : ''}
   `;
   document.getElementById('evPopupAtt').style.display = 'none';
@@ -372,7 +372,7 @@ export function renderCalendar() {
       const sc=sanitizeCor(e.cor);
       h += `<div class="cal-ev ev-custom${isP?' ev-past':''}" style="top:${topPx}px;height:${durPx}px;border-color:${sc};background:${sc}18" data-custom="${e.id}">
         <div class="ev-name" style="color:${sc}">${ti2} ${esc(e.nome)}</div>
-        <div class="ev-time">${e.ini}–${e.fim}</div>
+        <div class="ev-time">${esc(e.ini)}–${esc(e.fim)}</div>
       </div>`;
     });
     h += '</div>';
