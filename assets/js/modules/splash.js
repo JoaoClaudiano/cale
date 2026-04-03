@@ -8,13 +8,22 @@ const AVATAR_COLORS = [
 ];
 
 const CACHE_KEY             = 'fs-avatar-cache';
-const EXIT_ANIMATION_MS     = 900;  // fallback safety timeout matching sp-zoom-out duration
-const MIN_SHOW_MS           = 950;  // minimum splash visibility before exit starts
-const PARTICLES             = 15;
+const EXIT_ANIMATION_MS     = 900;   // fallback safety timeout matching sp-zoom-out duration
+const MIN_SHOW_MS           = 1950;  // minimum splash visibility before exit starts (+1 s)
+const PARTICLES             = 65;
+
+// Brownian / firefly motion constants
+const BROWNIAN_FORCE   = 0.04;   // random nudge magnitude per frame
+const DAMPING          = 0.96;   // velocity decay per frame
+const BASE_MAX_SPEED   = 0.6;    // max px/frame at idle
+const ACTIVE_SPEED_MUL = 2.5;    // speed multiplier after avatar click
 
 let _showTs       = 0;
 let _clickResolve = null;
 let _clickPromise = null;
+let _particles    = [];
+let _rafId        = null;
+let _speedMul     = 1;
 
 // ── Avatar helpers (mirrors account.js logic) ──────────────
 
@@ -76,37 +85,83 @@ function _buildAvatar(cache) {
 }
 
 function _spawnParticles(container) {
+  _particles = [];
+  const frag = document.createDocumentFragment();
   for (let i = 0; i < PARTICLES; i++) {
-    const p   = document.createElement('span');
+    const p    = document.createElement('span');
     p.className = 'sp-particle';
-
-    // Random polar position in a ring around center (90–220 px radius)
-    const angle  = Math.random() * 2 * Math.PI;
-    const radius = 90 + Math.random() * 130;
-    const x      = Math.cos(angle) * radius;
-    const y      = Math.sin(angle) * radius;
-    const size   = 2 + Math.random() * 3;
-    const op     = (0.12 + Math.random() * 0.45).toFixed(3);
-    const dur    = (3.5 + Math.random() * 3.5).toFixed(2);
-    const delay  = (Math.random() * 4).toFixed(2);
-
-    p.style.cssText = `
-      left:${(50 + x / window.innerWidth  * 100).toFixed(2)}%;
-      top: ${(50 + y / window.innerHeight * 100).toFixed(2)}%;
-      width:${size.toFixed(1)}px;
-      height:${size.toFixed(1)}px;
-      --sp-op:${op};
-      animation-duration:${dur}s;
-      animation-delay:${delay}s;
-    `;
-    container.appendChild(p);
+    const size  = 1.5 + Math.random() * 3;
+    p.style.cssText = `width:${size.toFixed(1)}px;height:${size.toFixed(1)}px;`;
+    frag.appendChild(p);
+    _particles.push({
+      el:    p,
+      x:     Math.random() * window.innerWidth,
+      y:     Math.random() * window.innerHeight,
+      vx:    (Math.random() - 0.5) * 0.8,
+      vy:    (Math.random() - 0.5) * 0.8,
+      phase: Math.random() * Math.PI * 2,
+      rate:  0.012 + Math.random() * 0.025,
+      maxOp: 0.20  + Math.random() * 0.65,
+    });
   }
+  container.appendChild(frag);
+}
+
+function _tickParticles() {
+  const mul    = _speedMul;
+  const ww     = window.innerWidth;
+  const wh     = window.innerHeight;
+  const maxSpd = BASE_MAX_SPEED * mul;
+
+  for (const pt of _particles) {
+    // Brownian nudge
+    pt.vx += (Math.random() - 0.5) * BROWNIAN_FORCE * mul;
+    pt.vy += (Math.random() - 0.5) * BROWNIAN_FORCE * mul;
+
+    // Velocity decay
+    pt.vx *= DAMPING;
+    pt.vy *= DAMPING;
+
+    // Clamp to max speed
+    const spd = Math.hypot(pt.vx, pt.vy);
+    if (spd > maxSpd) { const s = maxSpd / spd; pt.vx *= s; pt.vy *= s; }
+
+    // Move
+    pt.x += pt.vx;
+    pt.y += pt.vy;
+
+    // Wrap edges
+    if (pt.x < 0)  pt.x += ww;
+    if (pt.x > ww) pt.x -= ww;
+    if (pt.y < 0)  pt.y += wh;
+    if (pt.y > wh) pt.y -= wh;
+
+    // Firefly flicker
+    pt.phase += pt.rate * mul;
+    const op = pt.maxOp * (0.55 + 0.45 * Math.sin(pt.phase));
+
+    pt.el.style.transform = `translate(${pt.x.toFixed(1)}px,${pt.y.toFixed(1)}px)`;
+    pt.el.style.opacity   = op.toFixed(3);
+  }
+
+  _rafId = requestAnimationFrame(_tickParticles);
+}
+
+function _startParticles() {
+  if (_rafId !== null) return;
+  _tickParticles();
+}
+
+function _stopParticles() {
+  if (_rafId !== null) { cancelAnimationFrame(_rafId); _rafId = null; }
+  _particles = [];
 }
 
 // ── Public API ───────────────────────────────────────────────
 
 export function showSplash() {
-  _showTs = Date.now();
+  _showTs   = Date.now();
+  _speedMul = 1;
 
   // Gate that resolves only after the user clicks the avatar
   _clickPromise = new Promise(res => { _clickResolve = res; });
@@ -125,20 +180,24 @@ export function showSplash() {
   const avatar = _buildAvatar(cache);
   splash.appendChild(avatar);
 
-  // Particles (hidden until sp-active)
+  // Particles — Brownian firefly loop started after sp-idle is added
   _spawnParticles(splash);
 
   document.body.appendChild(splash);
 
   // Next frame so the browser registers initial state before animation
   requestAnimationFrame(() => {
-    requestAnimationFrame(() => splash.classList.add('sp-idle'));
+    requestAnimationFrame(() => {
+      splash.classList.add('sp-idle');
+      _startParticles();
+    });
   });
 
   // Clicking the avatar triggers the immersive transition
   avatar.addEventListener('click', () => {
     splash.classList.remove('sp-idle');
     splash.classList.add('sp-active');
+    _speedMul = ACTIVE_SPEED_MUL;          // speed up fireflies on click
     _showTs = Date.now(); // MIN_SHOW_MS countdown begins from the click
     if (_clickResolve) { _clickResolve(); _clickResolve = null; }
   }, { once: true });
@@ -154,9 +213,10 @@ export function hideSplash() {
 
       setTimeout(() => {
         const splash = document.getElementById('splashScreen');
-        if (!splash) { resolve(); return; }
+        if (!splash) { _stopParticles(); resolve(); return; }
 
         splash.classList.add('sp-out');
+        _stopParticles();
 
         const done = () => { splash.remove(); resolve(); };
         splash.addEventListener('animationend', done, { once: true });
