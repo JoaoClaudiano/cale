@@ -23,6 +23,17 @@ export function setSupaUser(v) { supaUser = v; }
 let _pendingSaves = 0;
 let _hideTimer    = null;
 
+function _updateHeaderChips() {
+  const header = document.querySelector('header');
+  if (!header) return;
+  const ids = ['offlineBadge', 'pendingBadge', 'syncBadge'];
+  const hasVisible = ids.some(id => {
+    const el = document.getElementById(id);
+    return el && el.style.display !== 'none';
+  });
+  header.classList.toggle('has-chips', hasVisible);
+}
+
 function _setSyncBadge(state) {
   const el = document.getElementById('syncBadge');
   if (!el || !supaUser) return;
@@ -36,7 +47,7 @@ function _setSyncBadge(state) {
     el.className   = 'sync-badge saved';
     el.style.display = '';
     _hideTimer = setTimeout(() => {
-      if (_pendingSaves === 0) el.style.display = 'none';
+      if (_pendingSaves === 0) { el.style.display = 'none'; _updateHeaderChips(); }
     }, 3000);
   } else if (state === 'error') {
     el.textContent = '⚠ erro ao salvar';
@@ -45,6 +56,7 @@ function _setSyncBadge(state) {
   } else {
     el.style.display = 'none';
   }
+  _updateHeaderChips();
 }
 
 export function _onSaveStart() {
@@ -291,11 +303,13 @@ export async function updateOfflineBadge() {
       el.style.display = 'none';
     }
   } catch { el.style.display = 'none'; }
+  _updateHeaderChips();
 }
 
 export function updateOnlineStatus() {
   const el = document.getElementById('offlineBadge');
   if (el) el.style.display = navigator.onLine ? 'none' : '';
+  _updateHeaderChips();
   if (navigator.onLine) processOfflineQueue();
 }
 
