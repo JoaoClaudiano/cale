@@ -1214,16 +1214,35 @@ body.login-page:not(.dark) .btn-google:hover {
   display: flex; align-items: center; gap: .9rem;
   padding: .75rem 0 1rem; border-bottom: 1px solid var(--border); margin-bottom: .25rem;
 }
+.acc-avatar-wrap {
+  position: relative; flex-shrink: 0; cursor: pointer;
+  border-radius: 50%; display: inline-block;
+}
 .acc-avatar-lg {
-  width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+  width: 52px; height: 52px; border-radius: 50%; overflow: hidden;
   background: var(--accent); color: #fff;
   display: flex; align-items: center; justify-content: center;
   font-size: 20px; font-weight: 700; letter-spacing: .02em;
 }
+.acc-avatar-cam {
+  position: absolute; bottom: 0; right: 0;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; border: 2px solid var(--bg);
+  pointer-events: none;
+}
 .acc-user-info { display: flex; flex-direction: column; gap: .2rem; min-width: 0; }
+.acc-name-row  { display: flex; align-items: center; gap: .35rem; }
 .acc-name  { font-size: 15px; font-weight: 600; color: var(--text); }
 .acc-email { font-size: 12px; color: var(--text2); word-break: break-all; }
 .acc-meta  { font-size: 11px; color: var(--text3); }
+.acc-edit-btn {
+  background: none; border: none; cursor: pointer; flex-shrink: 0;
+  font-size: 11px; color: var(--text3); padding: 1px 4px;
+  border-radius: 4px; line-height: 1; transition: color .15s, background .15s;
+}
+.acc-edit-btn:hover { color: var(--accent); background: var(--surface2); }
 
 /* Sections */
 .acc-section {
