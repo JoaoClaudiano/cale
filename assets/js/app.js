@@ -179,7 +179,7 @@ setInterval(async () => {
 
 // ── Service Worker ──
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('../sw.js')
+  navigator.serviceWorker.register('./sw.js')
     .then(() => {
       navigator.serviceWorker.addEventListener('message', e => {
         if (e.data && e.data.type === 'SYNC_QUEUE') processOfflineQueue();

@@ -13,11 +13,13 @@
 </head>
 <body>
 <header>
-  <div style="display:flex;align-items:center">
-    <a href="index.html" style="text-decoration:none"><span class="logo">flow<b>.</b>planner</span></a>
-  </div>
-  <div class="hright">
-    <button class="hbtn" id="btnDark">☀ claro</button>
+  <div class="header-top">
+    <div style="display:flex;align-items:center">
+      <a href="index.html" style="text-decoration:none"><span class="logo">flow<b>.</b>planner</span></a>
+    </div>
+    <div class="hright">
+      <button class="hbtn" id="btnDark" aria-label="Alternar tema">☀ claro</button>
+    </div>
   </div>
 </header>
 
@@ -32,15 +34,15 @@
     <div class="page-card">
       <form class="contact-form" id="contactForm">
         <div class="form-group">
-          <label>Seu nome</label>
+          <label for="cName">Seu nome</label>
           <input class="form-input" type="text" id="cName" name="name" placeholder="Como devemos chamá-lo?" autocomplete="name" required>
         </div>
         <div class="form-group">
-          <label>Seu e-mail</label>
+          <label for="cEmail">Seu e-mail</label>
           <input class="form-input" type="email" id="cEmail" name="email" placeholder="seu@email.com" autocomplete="email" required>
         </div>
         <div class="form-group">
-          <label>Assunto</label>
+          <label for="cSubject">Assunto</label>
           <select class="form-select" id="cSubject" name="subject">
             <option value="sugestao">💡 Sugestão de melhoria</option>
             <option value="bug">🐛 Reportar um problema</option>
@@ -50,7 +52,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label>Mensagem</label>
+          <label for="cMessage">Mensagem</label>
           <textarea class="form-textarea" id="cMessage" name="message" placeholder="Descreva sua dúvida, sugestão ou problema com o máximo de detalhes possível…" required></textarea>
         </div>
         <div id="cStatus" style="font-size:12px;min-height:16px;color:var(--ok)"></div>
