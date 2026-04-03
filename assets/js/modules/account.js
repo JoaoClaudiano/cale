@@ -363,4 +363,7 @@ export function initAccountModal() {
       btn.disabled      = false;
     }
   });
+
+  // Populate header avatar immediately so it shows without waiting for the modal to open
+  _populateAccountInfo();
 }
