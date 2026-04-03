@@ -6,7 +6,7 @@
 // ═══════════════════════════════════════════════
 
 const OFFLINE_DB_NAME    = 'rotina-offline-v1';
-const OFFLINE_DB_VERSION = 2;           // v2: índice por aulaId para deduplicação
+const OFFLINE_DB_VERSION = 3;           // v3: índice entityId para deduplicação genérica
 const OFFLINE_STORE      = 'pending_ops';
 
 // Abre (ou cria) o banco IndexedDB
@@ -21,18 +21,23 @@ function _openOfflineDB() {
       } else {
         store = e.target.transaction.objectStore(OFFLINE_STORE);
       }
-      // Índice por aulaId para consulta rápida de deduplicação
+      // Índice por aulaId para consulta rápida de deduplicação (presença)
       if (!store.indexNames.contains('aulaId')) {
         store.createIndex('aulaId', 'aulaId', { unique: false });
       }
-      // Migração v1→v2: popula created_at a partir de ts nos registros existentes
+      // Índice genérico por entityId para deduplicação de tarefas/tópicos/eventos
+      if (!store.indexNames.contains('entityId')) {
+        store.createIndex('entityId', 'entityId', { unique: false });
+      }
+      // Migração v1→v2/v3: popula created_at e entityId nos registros existentes
       const cursorReq = store.openCursor();
       cursorReq.onsuccess = ev => {
         const cursor = ev.target.result;
         if (!cursor) return;
-        if (!cursor.value.created_at && cursor.value.ts) {
-          cursor.update({ ...cursor.value, created_at: cursor.value.ts });
-        }
+        const upd = { ...cursor.value };
+        if (!upd.created_at && upd.ts) upd.created_at = upd.ts;
+        if (!upd.entityId && upd.aulaId) upd.entityId = upd.aulaId;
+        cursor.update(upd);
         cursor.continue();
       };
     };
@@ -41,21 +46,38 @@ function _openOfflineDB() {
   });
 }
 
-// Insere ou atualiza uma operação pendente (deduplicação por aulaId + type)
-// Se já existir op do mesmo tipo para o mesmo aulaId, atualiza o valor e reseta o retry.
+// Insere ou atualiza uma operação pendente (deduplicação por entityId + type)
+// entityId deve ser definido por quem chama (aulaId para presença, item.id para tarefas/tópicos, ev.id para eventos)
 async function offlineUpsertOp(op) {
   const db = await _openOfflineDB();
   return new Promise((resolve, reject) => {
     const tx    = db.transaction(OFFLINE_STORE, 'readwrite');
     const store = tx.objectStore(OFFLINE_STORE);
-    const req   = store.index('aulaId').getAll(op.aulaId);
+    // Para compatibilidade: se entityId não vier, derivar de aulaId
+    const entityId = op.entityId || op.aulaId || null;
+    if (!entityId) {
+      // Sem chave de deduplicação: apenas insere
+      const addReq = store.add({
+        ...op,
+        entityId:    null,
+        status:      'pending',
+        retryCount:  0,
+        lastAttempt: null,
+        created_at:  Date.now(),
+      });
+      addReq.onsuccess = () => resolve(addReq.result);
+      addReq.onerror   = () => reject(addReq.error);
+      return;
+    }
+    const req = store.index('entityId').getAll(entityId);
     req.onsuccess = () => {
       const existing = req.result.find(r => r.type === op.type);
       if (existing) {
-        // Atualiza op existente com novos valores de op, preservando id e created_at; reseta retry
+        // Atualiza op existente com novos valores, preservando id e created_at; reseta retry
         const putReq = store.put({
           ...existing,
           ...op,
+          entityId:    entityId,
           id:          existing.id,
           created_at:  existing.created_at,
           status:      'pending',
@@ -67,6 +89,7 @@ async function offlineUpsertOp(op) {
       } else {
         const addReq = store.add({
           ...op,
+          entityId:    entityId,
           status:      'pending',
           retryCount:  0,
           lastAttempt: null,

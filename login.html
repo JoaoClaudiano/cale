@@ -121,6 +121,19 @@
     </svg>
     Entrar com Google
   </button>
+
+  <div class="glass-divider">ou</div>
+
+  <!-- Modo anônimo (dados salvos localmente) -->
+  <button class="btn-glass btn-glass-anon" id="btnGuest" type="button">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="8" r="4"/>
+      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+      <line x1="16" y1="3" x2="22" y2="9"/>
+      <line x1="22" y1="3" x2="16" y2="9"/>
+    </svg>
+    Continuar sem conta
+  </button>
 </div>
 
 <!-- E-mail / Senha modal -->
@@ -296,12 +309,20 @@
       params.set('migrate', '1');
     }
     const qs = params.toString();
-    const redirectTo = window.location.origin + '/index.html' + (qs ? '?' + qs : '');
+    const base = window.location.href.replace(/login\.html.*$/, '');
+    const redirectTo = base + 'index.html' + (qs ? '?' + qs : '');
     const { error } = await sb.auth.signInWithOAuth({
       provider: 'google',
       options:  { redirectTo },
     });
     if (error) document.getElementById('loginErr').textContent = error.message;
+  });
+
+  // ── Modo anônimo (dados salvos localmente) ───────────────────────────────
+  document.getElementById('btnGuest').addEventListener('click', () => {
+    sessionStorage.setItem('fs-guest', '1');
+    const base = window.location.href.replace(/login\.html.*$/, '');
+    window.location.href = base + 'index.html';
   });
 
   // ── Migração de conta convidada ──────────────────────────────────────────
