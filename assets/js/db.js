@@ -34,10 +34,12 @@ function _openOfflineDB() {
       cursorReq.onsuccess = ev => {
         const cursor = ev.target.result;
         if (!cursor) return;
-        const upd = { ...cursor.value };
-        if (!upd.created_at && upd.ts) upd.created_at = upd.ts;
-        if (!upd.entityId && upd.aulaId) upd.entityId = upd.aulaId;
-        cursor.update(upd);
+        const orig = cursor.value;
+        let changed = false;
+        const upd = { ...orig };
+        if (!upd.created_at && upd.ts) { upd.created_at = upd.ts; changed = true; }
+        if (!upd.entityId && upd.aulaId) { upd.entityId = upd.aulaId; changed = true; }
+        if (changed) cursor.update(upd);
         cursor.continue();
       };
     };

@@ -175,6 +175,9 @@
 
 <script>
 (function () {
+  // ── Utilitário: base URL da pasta de login ─────────────────────────────────
+  const APP_BASE = window.location.href.replace(/login\.html.*$/, '');
+
   // ── Dark mode ──────────────────────────────────────────────────────────────
   const KEY = 'fs-dark';
   function applyTheme(dark) { document.body.classList.toggle('dark', dark); }
@@ -309,8 +312,7 @@
       params.set('migrate', '1');
     }
     const qs = params.toString();
-    const base = window.location.href.replace(/login\.html.*$/, '');
-    const redirectTo = base + 'index.html' + (qs ? '?' + qs : '');
+    const redirectTo = APP_BASE + 'index.html' + (qs ? '?' + qs : '');
     const { error } = await sb.auth.signInWithOAuth({
       provider: 'google',
       options:  { redirectTo },
@@ -321,8 +323,7 @@
   // ── Modo anônimo (dados salvos localmente) ───────────────────────────────
   document.getElementById('btnGuest').addEventListener('click', () => {
     sessionStorage.setItem('fs-guest', '1');
-    const base = window.location.href.replace(/login\.html.*$/, '');
-    window.location.href = base + 'index.html';
+    window.location.href = APP_BASE + 'index.html';
   });
 
   // ── Migração de conta convidada ──────────────────────────────────────────
