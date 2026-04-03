@@ -7,16 +7,28 @@ const AVATAR_COLORS = [
   '#dc2626','#db2777','#0891b2','#65a30d',
 ];
 
+// Particle colour palette: [centre colour, outer glow colour]
+const PARTICLE_COLORS = [
+  ['rgba(210,230,255,.95)', 'rgba(160,190,255,.25)'],   // cool blue-white
+  ['rgba(235,210,255,.95)', 'rgba(190,140,255,.25)'],   // soft purple
+  ['rgba(185,245,255,.92)', 'rgba(90,210,240,.22)'],    // cyan
+  ['rgba(255,245,175,.90)', 'rgba(255,210,95,.20)'],    // warm gold
+];
+
 const CACHE_KEY             = 'fs-avatar-cache';
 const EXIT_ANIMATION_MS     = 900;   // fallback safety timeout matching sp-zoom-out duration
 const MIN_SHOW_MS           = 1950;  // minimum splash visibility before exit starts (+1 s)
 const PARTICLES             = 65;
 
 // Brownian / firefly motion constants
-const BROWNIAN_FORCE   = 0.04;   // random nudge magnitude per frame
-const DAMPING          = 0.96;   // velocity decay per frame
-const BASE_MAX_SPEED   = 0.6;    // max px/frame at idle
-const ACTIVE_SPEED_MUL = 2.5;    // speed multiplier after avatar click
+const BROWNIAN_FORCE     = 0.04;   // random nudge magnitude per frame
+const DAMPING            = 0.96;   // velocity decay per frame
+const BASE_MAX_SPEED     = 0.6;    // max px/frame at idle
+const ACTIVE_SPEED_MUL   = 2.5;   // speed multiplier after avatar click
+
+// Convergence constants
+const CONVERGENCE_LERP     = 0.025;  // fraction of distance closed per frame (~78% in 1 s at 60 fps)
+const CONVERGENCE_ARRIVE_R = 32;     // px from avatar centre — particle starts fading out
 
 let _showTs       = 0;
 let _clickResolve = null;
@@ -24,6 +36,9 @@ let _clickPromise = null;
 let _particles    = [];
 let _rafId        = null;
 let _speedMul     = 1;
+let _converging   = false;
+let _avatarCX     = 0;
+let _avatarCY     = 0;
 
 // ── Avatar helpers (mirrors account.js logic) ──────────────
 
@@ -90,8 +105,11 @@ function _spawnParticles(container) {
   for (let i = 0; i < PARTICLES; i++) {
     const p    = document.createElement('span');
     p.className = 'sp-particle';
-    const size  = 1.5 + Math.random() * 3;
-    p.style.cssText = `width:${size.toFixed(1)}px;height:${size.toFixed(1)}px;`;
+    // Wider size range: small specks to larger glowing orbs
+    const size  = 1.2 + Math.random() * 4.3;
+    const col   = PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)];
+    p.style.cssText = `width:${size.toFixed(1)}px;height:${size.toFixed(1)}px;` +
+      `background:radial-gradient(circle,${col[0]} 0%,${col[1]} 100%);`;
     frag.appendChild(p);
     _particles.push({
       el:    p,
@@ -100,8 +118,8 @@ function _spawnParticles(container) {
       vx:    (Math.random() - 0.5) * 0.8,
       vy:    (Math.random() - 0.5) * 0.8,
       phase: Math.random() * Math.PI * 2,
-      rate:  0.012 + Math.random() * 0.025,
-      maxOp: 0.20  + Math.random() * 0.65,
+      rate:  0.010 + Math.random() * 0.030,
+      maxOp: 0.18  + Math.random() * 0.72,
     });
   }
   container.appendChild(frag);
@@ -114,34 +132,43 @@ function _tickParticles() {
   const maxSpd = BASE_MAX_SPEED * mul;
 
   for (const pt of _particles) {
-    // Brownian nudge
-    pt.vx += (Math.random() - 0.5) * BROWNIAN_FORCE * mul;
-    pt.vy += (Math.random() - 0.5) * BROWNIAN_FORCE * mul;
+    if (_converging) {
+      // ── Convergence mode: lerp toward avatar centre with a touch of jitter ──
+      pt.x += (_avatarCX - pt.x) * CONVERGENCE_LERP + (Math.random() - 0.5) * 0.4;
+      pt.y += (_avatarCY - pt.y) * CONVERGENCE_LERP + (Math.random() - 0.5) * 0.4;
 
-    // Velocity decay
-    pt.vx *= DAMPING;
-    pt.vy *= DAMPING;
+      pt.phase += pt.rate;
+      const d    = Math.hypot(_avatarCX - pt.x, _avatarCY - pt.y);
+      const fade = d < CONVERGENCE_ARRIVE_R ? d / CONVERGENCE_ARRIVE_R : 1;
+      const op   = pt.maxOp * (0.55 + 0.45 * Math.sin(pt.phase)) * fade;
 
-    // Clamp to max speed
-    const spd = Math.hypot(pt.vx, pt.vy);
-    if (spd > maxSpd) { const s = maxSpd / spd; pt.vx *= s; pt.vy *= s; }
+      pt.el.style.transform = `translate(${pt.x.toFixed(1)}px,${pt.y.toFixed(1)}px)`;
+      pt.el.style.opacity   = op.toFixed(3);
+    } else {
+      // ── Normal mode: Brownian firefly motion ──
+      pt.vx += (Math.random() - 0.5) * BROWNIAN_FORCE * mul;
+      pt.vy += (Math.random() - 0.5) * BROWNIAN_FORCE * mul;
 
-    // Move
-    pt.x += pt.vx;
-    pt.y += pt.vy;
+      pt.vx *= DAMPING;
+      pt.vy *= DAMPING;
 
-    // Wrap edges
-    if (pt.x < 0)  pt.x += ww;
-    if (pt.x > ww) pt.x -= ww;
-    if (pt.y < 0)  pt.y += wh;
-    if (pt.y > wh) pt.y -= wh;
+      const spd = Math.hypot(pt.vx, pt.vy);
+      if (spd > maxSpd) { const s = maxSpd / spd; pt.vx *= s; pt.vy *= s; }
 
-    // Firefly flicker
-    pt.phase += pt.rate * mul;
-    const op = pt.maxOp * (0.55 + 0.45 * Math.sin(pt.phase));
+      pt.x += pt.vx;
+      pt.y += pt.vy;
 
-    pt.el.style.transform = `translate(${pt.x.toFixed(1)}px,${pt.y.toFixed(1)}px)`;
-    pt.el.style.opacity   = op.toFixed(3);
+      if (pt.x < 0)  pt.x += ww;
+      if (pt.x > ww) pt.x -= ww;
+      if (pt.y < 0)  pt.y += wh;
+      if (pt.y > wh) pt.y -= wh;
+
+      pt.phase += pt.rate * mul;
+      const op = pt.maxOp * (0.55 + 0.45 * Math.sin(pt.phase));
+
+      pt.el.style.transform = `translate(${pt.x.toFixed(1)}px,${pt.y.toFixed(1)}px)`;
+      pt.el.style.opacity   = op.toFixed(3);
+    }
   }
 
   _rafId = requestAnimationFrame(_tickParticles);
@@ -154,14 +181,16 @@ function _startParticles() {
 
 function _stopParticles() {
   if (_rafId !== null) { cancelAnimationFrame(_rafId); _rafId = null; }
-  _particles = [];
+  _particles  = [];
+  _converging = false;
 }
 
 // ── Public API ───────────────────────────────────────────────
 
 export function showSplash() {
-  _showTs   = Date.now();
-  _speedMul = 1;
+  _showTs     = Date.now();
+  _speedMul   = 1;
+  _converging = false;
 
   // Gate that resolves only after the user clicks the avatar
   _clickPromise = new Promise(res => { _clickResolve = res; });
@@ -195,6 +224,10 @@ export function showSplash() {
 
   // Clicking the avatar triggers the immersive transition
   avatar.addEventListener('click', () => {
+    const rect = avatar.getBoundingClientRect();
+    _avatarCX  = rect.left + rect.width  / 2;
+    _avatarCY  = rect.top  + rect.height / 2;
+    _converging = true;
     splash.classList.remove('sp-idle');
     splash.classList.add('sp-active');
     _speedMul = ACTIVE_SPEED_MUL;          // speed up fireflies on click
