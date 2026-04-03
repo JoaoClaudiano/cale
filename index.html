@@ -446,12 +446,14 @@
     <div class="acc-section" id="accSecuritySection">
       <div class="acc-section-title">🔐 segurança</div>
       <div class="acc-form-block">
+        <form onsubmit="return false" autocomplete="on">
         <div class="form-group" style="margin-bottom:.5rem">
           <label>Nova senha</label>
           <input class="form-input" type="password" id="accNewPass" placeholder="mínimo 8 caracteres" autocomplete="new-password">
         </div>
         <p class="login-err" id="accPassErr"></p>
-        <button class="btn-save" id="accBtnChangePass" type="button" style="width:100%">Alterar senha</button>
+        <button class="btn-save" id="accBtnChangePass" type="submit" style="width:100%">Alterar senha</button>
+        </form>
       </div>
       <div class="acc-form-block" style="margin-top:.75rem">
         <div class="form-group" style="margin-bottom:.5rem">

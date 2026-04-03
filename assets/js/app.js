@@ -21,6 +21,7 @@ import { LS }                                            from './modules/config.
 import { initTour }                                      from './modules/tour.js';
 import { initLocationModal, updateGeoBanner }            from './modules/location.js';
 import { initAccountModal }                              from './modules/account.js';
+import { getDynamicGreeting, typewriterGreeting }        from './modules/greeting.js';
 
 // ── Registra hooks inter-módulo ──
 registerSaveHook(updateFooter);
@@ -35,16 +36,14 @@ const GUEST_UPGRADE_BANNER_DELAY_MS = 8000;
 function updateGreeting() {
   const el = document.getElementById('greeting');
   if (!el) return;
-  const h = new Date().getHours();
-  const period = h >= 5 && h < 12 ? 'Bom dia' : h >= 12 && h < 18 ? 'Boa tarde' : 'Boa noite';
-  const icon   = h >= 5 && h < 12 ? '☀️' : h >= 12 && h < 18 ? '🌤️' : '🌙';
   let name = '';
   if (supaUser) {
     const meta = supaUser.user_metadata;
     const full  = (meta && (meta.full_name || meta.name)) || '';
     name = full ? full.split(' ')[0] : supaUser.email.split('@')[0];
   }
-  el.textContent = name ? `${icon} ${period}, ${name}!` : `${icon} ${period}!`;
+  const text = getDynamicGreeting(name || undefined);
+  typewriterGreeting(el, text);
 }
 
 // ─────────────────────────────────────────────────────
